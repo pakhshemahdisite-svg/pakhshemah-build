@@ -52,6 +52,12 @@ jobs:
         run: |
           set -euo pipefail
           gradle --no-daemon -p android :app:lintPakhshMahdiDebug :app:testPakhshMahdiDebugUnitTest
+
+      - name: Build release APK and AAB
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle --no-daemon -p android :app:assemblePakhshMahdiRelease :app:bundlePakhshMahdiRelease --stacktrace
       - name: Package APK
         shell: bash
         run: |
@@ -86,5 +92,15 @@ jobs:
           path: |
             release/PakhshMahdi-latest-dev.apk
             release/PakhshMahdi-latest-dev.apk.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload release candidate artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PakhshMahdi-Android-0.9.8-Release-Candidate
+          path: |
+            android/app/build/outputs/apk/pakhshMahdi/release/*.apk
+            android/app/build/outputs/bundle/pakhshMahdiRelease/*.aab
           if-no-files-found: error
           retention-days: 30
