@@ -1,0 +1,31 @@
+{
+  "clientId": "pakhsh-mahdi",
+  "appName": "پخش مهدی",
+  "appSubtitle": "عمده‌فروشی لوازم خانه و آشپزخانه",
+  "domain": "https://pakhshemahdi.com",
+  "apiBaseUrl": "https://pakhshemahdi.com/wp-json/pm-app/v1/",
+  "storeApiUrl": "https://pakhshemahdi.com/wp-json/wc/store/v1/",
+  "pwsAjaxUrl": "https://pakhshemahdi.com/wp-admin/admin-ajax.php",
+  "supportUrl": "https://pakhshemahdi.com/support-tickets/",
+  "contactUrl": "https://pakhshemahdi.com/contact-us/",
+  "androidApplicationId": "com.pakhshmahdi.app",
+  "iosBundleId": "com.pakhshmahdi.app",
+  "androidFlavor": "pakhshMahdi",
+  "iosScheme": "PakhshMahdi",
+  "branding": {
+    "primary": "#0B2A57",
+    "primaryDark": "#071C3C",
+    "accent": "#D7A84B",
+    "darkBackground": "#04111E"
+  },
+  "features": {
+    "wishlist": true,
+    "otp": true,
+    "coupons": true,
+    "notifications": true,
+    "support": true,
+    "pwsShipping": true,
+    "onlinePayment": true
+  },
+  "signingSecretPrefix": "PAKHSH_MAHDI"
+}
