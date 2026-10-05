@@ -1,5 +1,10 @@
 package com.pakhshmahdi.app.feature.profile
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,9 +19,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pakhshmahdi.app.core.AppConfig
 import com.pakhshmahdi.app.data.auth.AuthStore
 import com.pakhshmahdi.app.data.auth.OrderSummary
 import com.pakhshmahdi.app.data.local.LocalStore
@@ -32,9 +40,28 @@ fun NotificationsScreen(
     onLogin: () -> Unit
 ) {
     val c = PMTheme.colors
+    val context = LocalContext.current
     val vm: ProfileViewModel = viewModel()
     val state by vm.state.collectAsState()
     val user = AuthStore.user
+    var notificationPermissionGranted by remember {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        notificationPermissionGranted = granted
+    }
+    val needsNotificationPermission =
+        AppConfig.FEATURE_NOTIFICATIONS &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !notificationPermissionGranted
     var changedOrderIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
     val previousStatuses = remember(user?.id) { LocalStore.loadOrderStatuses() }
 
@@ -78,6 +105,45 @@ fun NotificationsScreen(
                 }
             }
         )
+
+        if (user != null && needsNotificationPermission) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                shape = PMTheme.shapes.card,
+                color = c.primary.copy(alpha = .07f),
+                border = BorderStroke(1.dp, c.primary.copy(alpha = .20f))
+            ) {
+                Column(Modifier.padding(14.dp)) {
+                    Text(
+                        "اعلان تغییر وضعیت سفارش‌ها",
+                        color = c.textPrimary,
+                        fontWeight = FontWeight.Black
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "برای دریافت اعلان تغییر وضعیت سفارش در پس‌زمینه، اجازه اعلان‌ها را فعال کنید.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = c.textSecondary
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Button(
+                        onClick = {
+                            notificationPermissionLauncher.launch(
+                                Manifest.permission.POST_NOTIFICATIONS
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = c.primary
+                        ),
+                        shape = PMTheme.shapes.medium
+                    ) {
+                        Text("فعال‌سازی اعلان‌ها")
+                    }
+                }
+            }
+        }
 
         when {
             user == null -> {
