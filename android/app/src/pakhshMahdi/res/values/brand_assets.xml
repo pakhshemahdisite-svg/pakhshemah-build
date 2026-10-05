@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="drawable" name="brand_logo">@drawable/pakhsh_mahdi_logo</item>
+    <item type="drawable" name="brand_app_icon">@drawable/pakhsh_mahdi_app_icon</item>
+    <item type="drawable" name="brand_home_banner">@drawable/pakhsh_mahdi_home_banner</item>
+</resources>
