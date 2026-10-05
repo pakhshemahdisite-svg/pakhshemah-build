@@ -22,6 +22,8 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           import json
+          import re
+          import urllib.parse
           import urllib.request
 
           endpoints = {
@@ -109,6 +111,66 @@ jobs:
           if candidate is None:
               raise RuntimeError("cart smoke: no simple purchasable in-stock product found")
 
+          # Validate the live Persian WooCommerce shipping city source and the
+          # PM App shipping quote endpoint. These calls calculate only; no order is created.
+          city_form = urllib.parse.urlencode({
+              "action": "mahdiy_load_cities",
+              "state_id": "558",
+              "type": "billing",
+          }).encode("utf-8")
+          city_req = urllib.request.Request(
+              "https://pakhshemahdi.com/wp-admin/admin-ajax.php",
+              data=city_form,
+              method="POST",
+              headers={
+                  "User-Agent": "PakhshMahdi-CI/1.0",
+                  "Content-Type": "application/x-www-form-urlencoded",
+              },
+          )
+          with urllib.request.urlopen(city_req, timeout=30) as response:
+              city_html = response.read().decode("utf-8", errors="replace")
+          city_match = re.search(
+              r"""<option\s+[^>]*value=['"](\d+)['"][^>]*>""",
+              city_html,
+              re.IGNORECASE,
+          )
+          if not city_match or city_match.group(1) == "0":
+              all_ids = re.findall(
+                  r"""<option\s+[^>]*value=['"](\d+)['"][^>]*>""",
+                  city_html,
+                  re.IGNORECASE,
+              )
+              city_id = next((value for value in all_ids if value != "0"), None)
+          else:
+              city_id = city_match.group(1)
+          if not city_id:
+              raise RuntimeError("shipping smoke: PWS city list did not return a valid city")
+          print(f"pws_cities: OK (city {city_id})")
+
+          quote_payload = json.dumps({
+              "lines": [{"id": candidate["id"], "quantity": 1}],
+              "state": "558",
+              "city": city_id,
+              "postcode": "1111111111",
+          }).encode("utf-8")
+          quote_req = urllib.request.Request(
+              "https://pakhshemahdi.com/wp-json/pm-app/v1/shipping-quote",
+              data=quote_payload,
+              method="POST",
+              headers={
+                  "User-Agent": "PakhshMahdi-CI/1.0",
+                  "Accept": "application/json",
+                  "Content-Type": "application/json",
+              },
+          )
+          with urllib.request.urlopen(quote_req, timeout=30) as response:
+              quote = json.loads(response.read().decode("utf-8"))
+          if not isinstance(quote, dict) or not str(quote.get("rateId", "")).strip():
+              raise RuntimeError("shipping smoke: invalid shipping quote payload")
+          if "price" not in quote or "totalWeight" not in quote:
+              raise RuntimeError("shipping smoke: quote totals missing")
+          print("shipping_quote: OK")
+
           cart_url = endpoints["store_cart"]
           cart_req = urllib.request.Request(
               cart_url,
@@ -143,6 +205,52 @@ jobs:
           if not isinstance(added.get("totals"), dict):
               raise RuntimeError("cart smoke: cart totals missing after add-item")
           print(f"cart_add_item: OK (product {candidate['id']})")
+
+          customer_payload = json.dumps({
+              "billing_address": {
+                  "first_name": "CI",
+                  "last_name": "Smoke",
+                  "company": "",
+                  "address_1": "CI smoke test",
+                  "address_2": "",
+                  "city": city_id,
+                  "state": "558",
+                  "postcode": "1111111111",
+                  "country": "IR",
+                  "phone": "09000000000",
+                  "email": "",
+              },
+              "shipping_address": {
+                  "first_name": "CI",
+                  "last_name": "Smoke",
+                  "company": "",
+                  "address_1": "CI smoke test",
+                  "address_2": "",
+                  "city": city_id,
+                  "state": "558",
+                  "postcode": "1111111111",
+                  "country": "IR",
+                  "phone": "09000000000",
+              },
+          }).encode("utf-8")
+          customer_req = urllib.request.Request(
+              "https://pakhshemahdi.com/wp-json/wc/store/v1/cart/update-customer",
+              data=customer_payload,
+              method="POST",
+              headers={
+                  "User-Agent": "PakhshMahdi-CI/1.0",
+                  "Accept": "application/json",
+                  "Content-Type": "application/json",
+                  "Cart-Token": cart_token,
+              },
+          )
+          with urllib.request.urlopen(customer_req, timeout=30) as response:
+              updated_cart = json.loads(response.read().decode("utf-8"))
+          if not isinstance(updated_cart, dict) or int(updated_cart.get("items_count", 0)) < 1:
+              raise RuntimeError("cart smoke: update-customer returned invalid cart")
+          if "shipping_rates" not in updated_cart:
+              raise RuntimeError("cart smoke: shipping_rates field missing after update-customer")
+          print("cart_update_customer: OK")
 
           clear_req = urllib.request.Request(
               "https://pakhshemahdi.com/wp-json/wc/store/v1/cart/items",
