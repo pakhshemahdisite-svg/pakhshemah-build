@@ -15,6 +15,19 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Read Android version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(grep -E 'versionName[[:space:]]*=' android/app/build.gradle.kts | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')"
+          VERSION_CODE="$(grep -E 'versionCode[[:space:]]*=' android/app/build.gradle.kts | head -n1 | sed -E 's/[^0-9]*([0-9]+).*/\1/')"
+          test -n "$VERSION"
+          test -n "$VERSION_CODE"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "Android version: $VERSION ($VERSION_CODE)"
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -80,17 +93,17 @@ jobs:
           test -f "$AAB"
 
           mkdir -p release
-          cp "$APK" release/PakhshMahdi-1.0.0-release.apk
-          cp "$AAB" release/PakhshMahdi-1.0.0-release.aab
+          cp "$APK" release/PakhshMahdi-${{ steps.version.outputs.version }}-release.apk
+          cp "$AAB" release/PakhshMahdi-${{ steps.version.outputs.version }}-release.aab
 
-          "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose --print-certs release/PakhshMahdi-1.0.0-release.apk
-          sha256sum release/PakhshMahdi-1.0.0-release.apk > release/PakhshMahdi-1.0.0-release.apk.sha256
-          sha256sum release/PakhshMahdi-1.0.0-release.aab > release/PakhshMahdi-1.0.0-release.aab.sha256
+          "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose --print-certs release/PakhshMahdi-${{ steps.version.outputs.version }}-release.apk
+          sha256sum release/PakhshMahdi-${{ steps.version.outputs.version }}-release.apk > release/PakhshMahdi-${{ steps.version.outputs.version }}-release.apk.sha256
+          sha256sum release/PakhshMahdi-${{ steps.version.outputs.version }}-release.aab > release/PakhshMahdi-${{ steps.version.outputs.version }}-release.aab.sha256
 
       - name: Upload signed production artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: PakhshMahdi-Android-1.0.0-Signed-Release
+          name: PakhshMahdi-Android-${{ steps.version.outputs.version }}-Signed-Release
           path: release/
           if-no-files-found: error
           retention-days: 30
