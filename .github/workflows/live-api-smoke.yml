@@ -28,7 +28,7 @@ jobs:
               "health": "https://pakhshemahdi.com/wp-json/pm-app/v1/health",
               "home": "https://pakhshemahdi.com/wp-json/pm-app/v1/home",
               "categories": "https://pakhshemahdi.com/wp-json/pm-app/v1/categories",
-              "products": "https://pakhshemahdi.com/wp-json/pm-app/v1/products?page=1&per_page=2",
+              "products": "https://pakhshemahdi.com/wp-json/pm-app/v1/products?page=1&per_page=20",
               "store_cart": "https://pakhshemahdi.com/wp-json/wc/store/v1/cart",
           }
 
@@ -91,6 +91,72 @@ jobs:
           store_cart = payloads["store_cart"]
           if not isinstance(store_cart, dict) or "items" not in store_cart or "totals" not in store_cart:
               raise RuntimeError("store_cart: invalid WooCommerce Store API cart payload")
+
+          # Exercise a real transient WooCommerce Store API cart session without
+          # creating an order or payment. Select a simple, purchasable in-stock item.
+          candidate = next(
+              (
+                  item for item in products["items"]
+                  if isinstance(item, dict)
+                  and item.get("type") == "simple"
+                  and item.get("purchasable") is True
+                  and item.get("stockStatus") == "instock"
+                  and isinstance(item.get("id"), int)
+                  and item["id"] > 0
+              ),
+              None,
+          )
+          if candidate is None:
+              raise RuntimeError("cart smoke: no simple purchasable in-stock product found")
+
+          cart_url = endpoints["store_cart"]
+          cart_req = urllib.request.Request(
+              cart_url,
+              headers={
+                  "User-Agent": "PakhshMahdi-CI/1.0",
+                  "Accept": "application/json",
+              },
+          )
+          with urllib.request.urlopen(cart_req, timeout=30) as response:
+              cart_token = response.headers.get("Cart-Token")
+          if not cart_token:
+              raise RuntimeError("cart smoke: Cart-Token header missing")
+
+          add_payload = json.dumps(
+              {"id": candidate["id"], "quantity": 1}
+          ).encode("utf-8")
+          add_req = urllib.request.Request(
+              "https://pakhshemahdi.com/wp-json/wc/store/v1/cart/add-item",
+              data=add_payload,
+              method="POST",
+              headers={
+                  "User-Agent": "PakhshMahdi-CI/1.0",
+                  "Accept": "application/json",
+                  "Content-Type": "application/json",
+                  "Cart-Token": cart_token,
+              },
+          )
+          with urllib.request.urlopen(add_req, timeout=30) as response:
+              added = json.loads(response.read().decode("utf-8"))
+          if not isinstance(added, dict) or int(added.get("items_count", 0)) < 1:
+              raise RuntimeError("cart smoke: add-item did not produce a valid cart")
+          if not isinstance(added.get("totals"), dict):
+              raise RuntimeError("cart smoke: cart totals missing after add-item")
+          print(f"cart_add_item: OK (product {candidate['id']})")
+
+          clear_req = urllib.request.Request(
+              "https://pakhshemahdi.com/wp-json/wc/store/v1/cart/items",
+              method="DELETE",
+              headers={
+                  "User-Agent": "PakhshMahdi-CI/1.0",
+                  "Accept": "application/json",
+                  "Cart-Token": cart_token,
+              },
+          )
+          with urllib.request.urlopen(clear_req, timeout=30) as response:
+              if response.status not in (200, 204):
+                  raise RuntimeError(f"cart smoke: clear failed HTTP {response.status}")
+          print("cart_clear: OK")
 
           print("Live API smoke test passed.")
           PY
