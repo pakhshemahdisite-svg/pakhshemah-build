@@ -62,6 +62,23 @@ jobs:
           cp "$APK" release/PakhshMahdi-latest-dev.apk
           sha256sum release/PakhshMahdi-latest-dev.apk > release/PakhshMahdi-latest-dev.apk.sha256
           "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose --print-certs release/PakhshMahdi-latest-dev.apk
+      - name: Emulator install and launch smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: default
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          disk-size: 2048M
+          script: |
+            adb install -r release/PakhshMahdi-latest-dev.apk
+            adb shell pm path com.pakhshmahdi.app
+            adb shell am force-stop com.pakhshmahdi.app
+            adb shell monkey -p com.pakhshmahdi.app -c android.intent.category.LAUNCHER 1
+            sleep 8
+            adb shell pidof com.pakhshmahdi.app
+
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
         with:
