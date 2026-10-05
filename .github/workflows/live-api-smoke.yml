@@ -66,12 +66,27 @@ jobs:
           categories = payloads["categories"]
           if not isinstance(categories, dict) or not isinstance(categories.get("items"), list):
               raise RuntimeError("categories: expected items array")
+          if not categories["items"]:
+              raise RuntimeError("categories: catalog unexpectedly empty")
 
           products = payloads["products"]
           if not isinstance(products, dict) or not isinstance(products.get("items"), list):
               raise RuntimeError("products: expected items array")
           if "page" not in products or "totalPages" not in products:
               raise RuntimeError("products: pagination fields missing")
+          if not products["items"]:
+              raise RuntimeError("products: catalog unexpectedly empty")
+
+          sample = products["items"][0]
+          if not isinstance(sample, dict):
+              raise RuntimeError("products: sample product is not an object")
+          for key in ("id", "name", "price", "stockStatus"):
+              if key not in sample:
+                  raise RuntimeError(f"products: sample product missing {key}")
+          if not isinstance(sample["id"], int) or sample["id"] <= 0:
+              raise RuntimeError("products: invalid sample product id")
+          if not str(sample["name"]).strip():
+              raise RuntimeError("products: empty sample product name")
 
           store_cart = payloads["store_cart"]
           if not isinstance(store_cart, dict) or "items" not in store_cart or "totals" not in store_cart:
