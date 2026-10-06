@@ -1,0 +1,115 @@
+name: Build Pakhsh Mahdi iOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "ios/**"
+      - ".github/workflows/build-ios.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pakhsh-mahdi-ios-public
+  cancel-in-progress: true
+
+jobs:
+  build-ios:
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Read iOS version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(grep -m1 -E 'MARKETING_VERSION = ' ios/PakhshMahdi.xcodeproj/project.pbxproj | sed -E 's/.*MARKETING_VERSION = ([^;]+);.*/\1/' | xargs)"
+          BUILD="$(grep -m1 -E 'CURRENT_PROJECT_VERSION = ' ios/PakhshMahdi.xcodeproj/project.pbxproj | sed -E 's/.*CURRENT_PROJECT_VERSION = ([^;]+);.*/\1/' | xargs)"
+          test -n "$VERSION"
+          test -n "$BUILD"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "iOS version: $VERSION ($BUILD)"
+
+      - name: Show Xcode environment
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcodebuild -list -project ios/PakhshMahdi.xcodeproj
+
+      - name: Build iOS Simulator app
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf build/ios-derived-data
+          xcodebuild \
+            -project ios/PakhshMahdi.xcodeproj \
+            -scheme PakhshMahdi \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath build/ios-derived-data \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: Package simulator app
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP_PATH="$(find build/ios-derived-data/Build/Products -type d -name 'PakhshMahdi.app' | head -n 1)"
+          test -d "$APP_PATH"
+          mkdir -p release
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "release/PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Simulator.zip"
+          shasum -a 256 "release/PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Simulator.zip" > "release/PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Simulator.zip.sha256"
+
+      - name: Build unsigned device archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf build/PakhshMahdi.xcarchive
+          xcodebuild \
+            -project ios/PakhshMahdi.xcodeproj \
+            -scheme PakhshMahdi \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -archivePath build/PakhshMahdi.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            archive
+
+      - name: Package unsigned archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d build/PakhshMahdi.xcarchive
+          ditto -c -k --sequesterRsrc --keepParent build/PakhshMahdi.xcarchive "release/PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Unsigned-xcarchive.zip"
+          shasum -a 256 "release/PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Unsigned-xcarchive.zip" > "release/PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Unsigned-xcarchive.zip.sha256"
+
+      - name: Upload iOS simulator build
+        uses: actions/upload-artifact@v4
+        with:
+          name: PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Simulator
+          path: |
+            release/PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Simulator.zip
+            release/PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Simulator.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload unsigned device archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Unsigned-Archive
+          path: |
+            release/PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Unsigned-xcarchive.zip
+            release/PakhshMahdi-iOS-${{ steps.version.outputs.version }}-Unsigned-xcarchive.zip.sha256
+          if-no-files-found: error
+          retention-days: 30

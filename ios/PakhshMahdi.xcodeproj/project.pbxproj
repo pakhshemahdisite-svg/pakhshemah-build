@@ -1,0 +1,96 @@
+// !$*UTF8*$!
+{
+ archiveVersion = 1;
+ classes = {};
+ objectVersion = 56;
+ objects = {
+
+/* Begin PBXBuildFile section */
+ A00100000000000000000001 /* PakhshMahdiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000001 /* PakhshMahdiApp.swift */; };
+ A00100000000000000000002 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000002 /* RootView.swift */; };
+ A00100000000000000000003 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000003 /* DesignSystem.swift */; };
+ A00100000000000000000004 /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000004 /* AppConfig.swift */; };
+ A00100000000000000000005 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000005 /* Models.swift */; };
+ A00100000000000000000006 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000006 /* APIClient.swift */; };
+ A00100000000000000000008 /* CatalogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000008 /* CatalogStore.swift */; };
+ A00100000000000000000009 /* ProductImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000009 /* ProductImageView.swift */; };
+ A00100000000000000000010 /* ProductCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000010 /* ProductCardView.swift */; };
+ A00100000000000000000011 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000011 /* HomeView.swift */; };
+ A00100000000000000000012 /* CatalogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000012 /* CatalogView.swift */; };
+ A00100000000000000000013 /* ProductDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000013 /* ProductDetailView.swift */; };
+ A00100000000000000000014 /* CartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000014 /* CartView.swift */; };
+ A00100000000000000000015 /* CheckoutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000015 /* CheckoutView.swift */; };
+ A00100000000000000000016 /* OrderViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000016 /* OrderViews.swift */; };
+ A00100000000000000000017 /* AccountEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000017 /* AccountEditView.swift */; };
+ A00100000000000000000018 /* UtilityViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000018 /* UtilityViews.swift */; };
+ A00100000000000000000019 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000019 /* PrivacyInfo.xcprivacy */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+ B00100000000000000000001 /* PakhshMahdiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PakhshMahdiApp.swift; sourceTree = "<group>"; };
+ B00100000000000000000002 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+ B00100000000000000000003 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+ B00100000000000000000004 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+ B00100000000000000000005 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+ B00100000000000000000006 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+ B00100000000000000000008 /* CatalogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogStore.swift; sourceTree = "<group>"; };
+ B00100000000000000000009 /* ProductImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductImageView.swift; sourceTree = "<group>"; };
+ B00100000000000000000010 /* ProductCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductCardView.swift; sourceTree = "<group>"; };
+ B00100000000000000000011 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+ B00100000000000000000012 /* CatalogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CatalogView.swift; sourceTree = "<group>"; };
+ B00100000000000000000013 /* ProductDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductDetailView.swift; sourceTree = "<group>"; };
+ B00100000000000000000014 /* CartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartView.swift; sourceTree = "<group>"; };
+ B00100000000000000000015 /* CheckoutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckoutView.swift; sourceTree = "<group>"; };
+ B00100000000000000000016 /* OrderViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrderViews.swift; sourceTree = "<group>"; };
+ B00100000000000000000017 /* AccountEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountEditView.swift; sourceTree = "<group>"; };
+ B00100000000000000000018 /* UtilityViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilityViews.swift; sourceTree = "<group>"; };
+ B00100000000000000000019 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+ C00100000000000000000001 /* PakhshMahdi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PakhshMahdi.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+ D00100000000000000000001 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+ E00100000000000000000001 = {isa = PBXGroup; children = (E00100000000000000000002 /* PakhshMahdi */, E00100000000000000000003 /* Products */); sourceTree = "<group>"; };
+ E00100000000000000000002 /* PakhshMahdi */ = {isa = PBXGroup; path = PakhshMahdi; sourceTree = "<group>"; children = (
+ B00100000000000000000001, B00100000000000000000002, B00100000000000000000003, B00100000000000000000004,
+ B00100000000000000000005, B00100000000000000000006, B00100000000000000000008, B00100000000000000000009, B00100000000000000000010, B00100000000000000000011, B00100000000000000000012,
+ B00100000000000000000013, B00100000000000000000014, B00100000000000000000015, B00100000000000000000016, B00100000000000000000017, B00100000000000000000018, B00100000000000000000019 ); };
+ E00100000000000000000003 /* Products */ = {isa = PBXGroup; children = (C00100000000000000000001 /* PakhshMahdi.app */); name = Products; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+ F00100000000000000000001 /* PakhshMahdi */ = {isa = PBXNativeTarget; buildConfigurationList = F00200000000000000000001; buildPhases = (F00300000000000000000001 /* Sources */, D00100000000000000000001 /* Frameworks */, F00400000000000000000001 /* Resources */); buildRules = (); dependencies = (); name = PakhshMahdi; productName = PakhshMahdi; productReference = C00100000000000000000001; productType = "com.apple.product-type.application"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+ F00500000000000000000001 /* Project object */ = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 1600; LastUpgradeCheck = 1600; TargetAttributes = {F00100000000000000000001 = {CreatedOnToolsVersion = 16.0;};};}; buildConfigurationList = F00600000000000000000001; compatibilityVersion = "Xcode 15.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (en, Base); mainGroup = E00100000000000000000001; productRefGroup = E00100000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (F00100000000000000000001); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+ F00400000000000000000001 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (A00100000000000000000019 /* PrivacyInfo.xcprivacy in Resources */); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+ F00300000000000000000001 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (
+ A00100000000000000000001, A00100000000000000000002, A00100000000000000000003, A00100000000000000000004,
+ A00100000000000000000005, A00100000000000000000006, A00100000000000000000008, A00100000000000000000009, A00100000000000000000010, A00100000000000000000011, A00100000000000000000012,
+ A00100000000000000000013, A00100000000000000000014, A00100000000000000000015, A00100000000000000000016, A00100000000000000000017, A00100000000000000000018 ); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+ F00700000000000000000001 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0;}; name = Debug;};
+ F00700000000000000000002 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0;}; name = Release;};
+ F00800000000000000000001 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 9; DEVELOPMENT_ASSET_PATHS = ""; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "پخش مهدی"; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES; INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES; INFOPLIST_KEY_UILaunchScreen_Generation = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MARKETING_VERSION = 0.9.0; PRODUCT_BUNDLE_IDENTIFIER = com.pakhshmahdi.app; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2";}; name = Debug;};
+ F00800000000000000000002 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 9; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_KEY_CFBundleDisplayName = "پخش مهدی"; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES; INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES; INFOPLIST_KEY_UILaunchScreen_Generation = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; MARKETING_VERSION = 0.9.0; PRODUCT_BUNDLE_IDENTIFIER = com.pakhshmahdi.app; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2";}; name = Release;};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+ F00200000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (F00800000000000000000001, F00800000000000000000002); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+ F00600000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (F00700000000000000000001, F00700000000000000000002); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
+/* End XCConfigurationList section */
+ };
+ rootObject = F00500000000000000000001 /* Project object */;
+}
