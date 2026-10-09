@@ -1,31 +1,136 @@
 import SwiftUI
 
+private enum PMRootTab: Hashable {
+    case home
+    case categories
+    case cart
+    case profile
+}
+
 struct RootView: View {
     @EnvironmentObject private var cart: CartStore
-    @EnvironmentObject private var wishlist: WishlistStore
+
+    @State private var selectedTab: PMRootTab = .home
+    @State private var homeResetID = UUID()
+    @State private var categoriesResetID = UUID()
+    @State private var cartResetID = UUID()
+    @State private var profileResetID = UUID()
 
     var body: some View {
-        TabView {
-            NavigationStack { HomeView() }
-                .tabItem { Label("خانه", systemImage: "house") }
-
-            NavigationStack { CategoriesView() }
-                .tabItem { Label("دسته‌بندی", systemImage: "square.grid.2x2") }
-
-            if AppConfig.featureWishlist {
-                NavigationStack { WishlistView() }
-                    .tabItem { Label("علاقه‌مندی", systemImage: "heart") }
-                    .badge(wishlist.items.count)
+        VStack(spacing: 0) {
+            Group {
+                switch selectedTab {
+                case .home:
+                    NavigationStack { HomeView() }
+                        .id(homeResetID)
+                case .categories:
+                    NavigationStack { CategoriesView() }
+                        .id(categoriesResetID)
+                case .cart:
+                    NavigationStack { CartView() }
+                        .id(cartResetID)
+                case .profile:
+                    NavigationStack { ProfileView() }
+                        .id(profileResetID)
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            NavigationStack { CartView() }
-                .tabItem { Label("سبد خرید", systemImage: "cart") }
-                .badge(cart.totalQuantity)
-
-            NavigationStack { ProfileView() }
-                .tabItem { Label("پروفایل", systemImage: "person") }
+            PMRootBottomNavigation(
+                selected: selectedTab,
+                cartCount: cart.totalQuantity,
+                onSelect: selectTab
+            )
         }
-        .tint(PMColor.primary)
+        .background(PMColor.background)
+    }
+
+    private func selectTab(_ tab: PMRootTab) {
+        if tab == selectedTab {
+            switch tab {
+            case .home: homeResetID = UUID()
+            case .categories: categoriesResetID = UUID()
+            case .cart: cartResetID = UUID()
+            case .profile: profileResetID = UUID()
+            }
+        } else if tab == .home {
+            // Always rebuild the Home navigation stack so Home reliably returns
+            // to the real root even when the user is deep inside another screen.
+            homeResetID = UUID()
+        }
+        selectedTab = tab
+    }
+}
+
+private struct PMRootBottomNavigation: View {
+    let selected: PMRootTab
+    let cartCount: Int
+    let onSelect: (PMRootTab) -> Void
+
+    private let items: [(PMRootTab, String, String)] = [
+        (.home, "خانه", "house"),
+        (.categories, "دسته‌بندی‌ها", "square.grid.2x2"),
+        (.cart, "سبد خرید", "cart"),
+        (.profile, "حساب کاربری", "person")
+    ]
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(items, id: \.0) { item in
+                let active = selected == item.0
+                Button {
+                    onSelect(item.0)
+                } label: {
+                    VStack(spacing: 3) {
+                        ZStack(alignment: .topTrailing) {
+                            Image(systemName: item.2)
+                                .font(.system(size: 21, weight: active ? .bold : .medium))
+                                .frame(width: 29, height: 25)
+
+                            if item.0 == .cart && cartCount > 0 {
+                                Text("\(min(cartCount, 99))")
+                                    .font(.caption2.bold())
+                                    .foregroundStyle(.black)
+                                    .frame(minWidth: 18, minHeight: 18)
+                                    .background(PMColor.goldDeep)
+                                    .clipShape(Circle())
+                                    .offset(x: 9, y: -7)
+                            }
+                        }
+
+                        Text(item.1)
+                            .font(.caption2.weight(active ? .bold : .semibold))
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(active ? PMColor.gold : PMColor.secondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(active ? PMColor.pureBlack : Color.clear)
+                    .clipShape(RoundedRectangle(cornerRadius: 17))
+                    .overlay {
+                        if active {
+                            RoundedRectangle(cornerRadius: 17)
+                                .stroke(PMColor.goldDeep.opacity(0.8), lineWidth: 1)
+                        }
+                    }
+                    .shadow(
+                        color: active ? PMColor.gold.opacity(0.30) : .clear,
+                        radius: 8,
+                        y: 3
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.top, 7)
+        .padding(.bottom, 3)
+        .background(PMColor.surface)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(PMColor.border)
+                .frame(height: 1)
+        }
     }
 }
 
@@ -40,54 +145,87 @@ struct CategoriesView: View {
 
     var body: some View {
         ScrollView {
-            if catalog.home.categories.isEmpty && catalog.loading {
-                ProgressView()
-                    .padding(.top, 80)
-            } else if let error = catalog.error, catalog.home.categories.isEmpty {
-                ContentUnavailableView(
-                    "دسته‌بندی‌ها دریافت نشد",
-                    systemImage: "wifi.exclamationmark",
-                    description: Text(error)
-                )
-                .padding(.top, 40)
-            } else {
-                LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(catalog.home.categories) { category in
-                        NavigationLink {
-                            CatalogView(categoryID: category.id, title: category.name)
-                        } label: {
-                            VStack(spacing: 9) {
-                                ProductImageView(url: category.image)
-                                    .frame(width: 104, height: 104)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                                Text(category.name)
-                                    .font(.subheadline.bold())
-                                    .foregroundStyle(.primary)
-                                    .multilineTextAlignment(.center)
-                                    .lineLimit(2)
-                                if category.count > 0 {
-                                    Text("\(category.count) محصول")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(PMColor.surface)
-                            .clipShape(RoundedRectangle(cornerRadius: 18))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 18)
-                                    .stroke(PMColor.border.opacity(0.7), lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(.plain)
+            VStack(spacing: 14) {
+                HStack {
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 3) {
+                        Text("دسته‌بندی‌ها")
+                            .font(.title2.bold())
+                        Text("انتخاب گروه کالایی")
+                            .font(.caption)
+                            .foregroundStyle(PMColor.secondary)
                     }
                 }
-                .padding()
+                .padding(.horizontal)
+                .padding(.top, 12)
+
+                if catalog.home.categories.isEmpty && catalog.loading {
+                    ProgressView()
+                        .tint(PMColor.goldDeep)
+                        .padding(.top, 80)
+                } else if let error = catalog.error, catalog.home.categories.isEmpty {
+                    ContentUnavailableView(
+                        "دسته‌بندی‌ها دریافت نشد",
+                        systemImage: "wifi.exclamationmark",
+                        description: Text(error)
+                    )
+                    .padding(.top, 40)
+                } else {
+                    LazyVGrid(columns: columns, spacing: 10) {
+                        ForEach(catalog.home.categories) { category in
+                            NavigationLink {
+                                CatalogView(categoryID: category.id, title: category.name)
+                            } label: {
+                                VStack(spacing: 0) {
+                                    ProductImageView(url: category.image)
+                                        .frame(maxWidth: .infinity)
+                                        .aspectRatio(1.35, contentMode: .fill)
+                                        .clipped()
+
+                                    HStack(spacing: 8) {
+                                        ZStack {
+                                            Circle()
+                                                .fill(PMColor.gold.opacity(0.22))
+                                                .frame(width: 34, height: 34)
+                                            Image(systemName: "chevron.left")
+                                                .font(.caption.bold())
+                                                .foregroundStyle(PMColor.goldDeep)
+                                        }
+
+                                        Spacer(minLength: 0)
+
+                                        VStack(alignment: .trailing, spacing: 3) {
+                                            Text(category.name)
+                                                .font(.subheadline.bold())
+                                                .foregroundStyle(.primary)
+                                                .multilineTextAlignment(.trailing)
+                                                .lineLimit(2)
+                                            if category.count > 0 {
+                                                Text("\(category.count) محصول")
+                                                    .font(.caption2)
+                                                    .foregroundStyle(PMColor.secondary)
+                                            }
+                                        }
+                                    }
+                                    .padding(10)
+                                }
+                                .background(PMColor.surface)
+                                .clipShape(RoundedRectangle(cornerRadius: 20))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(PMColor.border, lineWidth: 1)
+                                )
+                                .shadow(color: .black.opacity(0.05), radius: 7, y: 3)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                }
             }
+            .padding(.bottom, 18)
         }
         .background(PMColor.background)
-        .navigationTitle("دسته‌بندی‌ها")
         .task {
             if catalog.home.categories.isEmpty {
                 await catalog.loadHome(force: true)
@@ -97,7 +235,8 @@ struct CategoriesView: View {
     }
 }
 
-private struct WishlistView: View {
+
+struct WishlistView: View {
     @EnvironmentObject private var wishlist: WishlistStore
     @EnvironmentObject private var cart: CartStore
 
@@ -146,9 +285,8 @@ private struct ProfileView: View {
         Group {
             if !session.isLoggedIn {
                 VStack(spacing: 18) {
-                    Image(systemName: "person.crop.circle.badge.questionmark")
-                        .font(.system(size: 64))
-                        .foregroundStyle(PMColor.primary)
+                    BrandLogoView()
+                        .frame(width: 180, height: 76)
 
                     Text("حساب کاربری")
                         .font(.title2.bold())
@@ -161,7 +299,7 @@ private struct ProfileView: View {
                         LoginView()
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(PMColor.primary)
+                    .tint(PMColor.gold)
                 }
                 .padding()
             } else {
@@ -291,9 +429,8 @@ struct LoginView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                Image(systemName: "iphone.gen3")
-                    .font(.system(size: 54))
-                    .foregroundStyle(PMColor.primary)
+                BrandLogoView()
+                    .frame(width: 190, height: 80)
 
                 Text("ورود به \(AppConfig.appName)")
                     .font(.title2.bold())
@@ -338,8 +475,8 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(PMColor.primary)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .foregroundStyle(PMColor.buttonForeground)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
                 .disabled(busy)
             }
