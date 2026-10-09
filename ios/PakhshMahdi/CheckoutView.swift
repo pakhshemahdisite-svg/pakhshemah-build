@@ -84,7 +84,7 @@ struct CheckoutView: View {
                                 } label: {
                                     HStack {
                                         Image(systemName: rate.selected ? "largecircle.fill.circle" : "circle")
-                                            .foregroundStyle(PMColor.primary)
+                                            .foregroundStyle(PMColor.gold)
                                         VStack(alignment: .trailing) {
                                             Text(rate.name).foregroundStyle(.primary)
                                             Text(shippingPrice(rate.price))
@@ -138,6 +138,7 @@ struct CheckoutView: View {
                     .fontWeight(.bold)
                     .disabled(
                         checkout.submitting ||
+                        !cart.isWholesaleEligible ||
                         selectedPayment.isEmpty ||
                         !addressIsValid ||
                         (serverCart.needsShipping && !hasSelectedShipping(serverCart))
@@ -158,11 +159,20 @@ struct CheckoutView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(PMColor.background)
+        .tint(PMColor.gold)
         .navigationTitle("تسویه حساب")
         .navigationBarTitleDisplayMode(.inline)
         .task {
             guard !initialized else { return }
             initialized = true
+
+            guard cart.isWholesaleEligible else {
+                checkout.error = cart.wholesaleMessage
+                return
+            }
+
             prefill()
             await loadCities()
 
