@@ -130,12 +130,37 @@ fun CartScreen(onCheckout: () -> Unit) {
                         .navigationBarsPadding()
                         .padding(12.dp)
                 ) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = PMTheme.shapes.medium,
+                        color = c.surfaceElevated,
+                        border = BorderStroke(1.dp, c.border)
+                    ) {
+                        Row(
+                            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(8.dp),
+                                shape = CircleShape,
+                                color = c.accentGold
+                            ) {}
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "قانون خرید عمده: حداقل ۶ عدد از هر کالا • حداقل سفارش ۱۵ میلیون تومان",
+                                color = c.textSecondary,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+
                     if (wholesaleMessage != null) {
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             shape = PMTheme.shapes.medium,
-                            color = c.primary.copy(alpha = .07f),
-                            border = BorderStroke(1.dp, c.primary.copy(alpha = .18f))
+                            color = c.accentGold.copy(alpha = .10f),
+                            border = BorderStroke(1.dp, c.accentGold.copy(alpha = .34f))
                         ) {
                             Text(
                                 wholesaleMessage,
