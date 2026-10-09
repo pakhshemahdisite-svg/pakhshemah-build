@@ -24,10 +24,10 @@ class WholesaleOrderPolicyTest {
     )
 
     @Test
-    fun allowsOrderWhenCartContainsAtLeastSixUnits() {
+    fun allowsOrderOnlyWhenEveryLineHasSixAndTotalIsFifteenMillion() {
         val lines = listOf(
-            line(1, "500000", 3),
-            line(2, "300000", 3)
+            line(1, "1500000", 6),
+            line(2, "1000000", 6)
         )
 
         assertTrue(WholesaleOrderPolicy.isEligible(lines))
@@ -35,23 +35,25 @@ class WholesaleOrderPolicyTest {
     }
 
     @Test
-    fun allowsOrderWhenSubtotalReachesFifteenMillion() {
+    fun blocksHighValueOrderWhenAProductIsBelowSix() {
         val lines = listOf(
-            line(1, "6328000", 3)
-        )
-
-        assertTrue(WholesaleOrderPolicy.isEligible(lines))
-    }
-
-    @Test
-    fun blocksOrderWhenNeitherConditionIsMet() {
-        val lines = listOf(
-            line(1, "508000", 2),
-            line(2, "900000", 3)
+            line(1, "10000000", 2),
+            line(2, "1000000", 6)
         )
 
         assertFalse(WholesaleOrderPolicy.isEligible(lines))
-        assertTrue(WholesaleOrderPolicy.message(lines)?.contains("1 عدد") == true)
+        assertTrue(WholesaleOrderPolicy.message(lines)?.contains("حداقل خرید هر کالا ۶ عدد") == true)
+    }
+
+    @Test
+    fun blocksSixUnitLinesWhenSubtotalIsBelowFifteenMillion() {
+        val lines = listOf(
+            line(1, "500000", 6),
+            line(2, "750000", 6)
+        )
+
+        assertFalse(WholesaleOrderPolicy.isEligible(lines))
+        assertTrue(WholesaleOrderPolicy.message(lines)?.contains("۱۵ میلیون") == true)
     }
 
     @Test
