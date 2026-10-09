@@ -11,7 +11,7 @@ import com.pakhshmahdi.app.data.model.ProductVariation
 data class CartLine(
     val product: Product,
     val variation: ProductVariation? = null,
-    val quantity: Int = 1
+    val quantity: Int = WholesaleOrderPolicy.MINIMUM_PER_PRODUCT
 ) {
     val key: String get() = "${product.id}:${variation?.id ?: 0L}"
     val unitPrice: String get() = variation?.price?.takeIf { it.isNotBlank() } ?: product.price
@@ -56,7 +56,7 @@ object CartStore {
         LocalStore.saveCart(lines.toList())
     }
 
-    fun add(product: Product, variation: ProductVariation? = null, quantity: Int = 1) {
+    fun add(product: Product, variation: ProductVariation? = null, quantity: Int = WholesaleOrderPolicy.MINIMUM_PER_PRODUCT) {
         if (quantity <= 0 || !product.isInStock || !product.purchasable) return
         if ((product.type == "variable" || product.variations.isNotEmpty()) && variation == null) return
         if (variation != null && variation.stockStatus != "instock") return
@@ -65,6 +65,7 @@ object CartStore {
         val index = lines.indexOfFirst { it.key == key }
         val requested = if (index >= 0) lines[index].quantity + quantity else quantity
         val maxStock = variation?.stockQuantity ?: product.stockQuantity.takeIf { variation == null }
+        if (index < 0 && maxStock != null && maxStock < WholesaleOrderPolicy.MINIMUM_PER_PRODUCT) return
         val safeQuantity = maxStock?.let { requested.coerceAtMost(it.coerceAtLeast(0)) } ?: requested
         if (safeQuantity <= 0) return
 
@@ -95,9 +96,10 @@ object CartStore {
         val index = lines.indexOfFirst { it.key == key }
         if (index < 0) return
         val line = lines[index]
-        if (line.quantity <= 1) lines.removeAt(index)
-        else lines[index] = line.copy(quantity = line.quantity - 1)
-        persist()
+        if (line.quantity > WholesaleOrderPolicy.MINIMUM_PER_PRODUCT) {
+            lines[index] = line.copy(quantity = line.quantity - 1)
+            persist()
+        }
     }
 
     fun remove(key: String) {
