@@ -25,7 +25,7 @@ struct RootView: View {
             NavigationStack { ProfileView() }
                 .tabItem { Label("پروفایل", systemImage: "person") }
         }
-        .tint(PMColor.primary)
+        .tint(PMColor.gold)
     }
 }
 
@@ -146,9 +146,8 @@ private struct ProfileView: View {
         Group {
             if !session.isLoggedIn {
                 VStack(spacing: 18) {
-                    Image(systemName: "person.crop.circle.badge.questionmark")
-                        .font(.system(size: 64))
-                        .foregroundStyle(PMColor.primary)
+                    BrandLogoView()
+                        .frame(width: 180, height: 76)
 
                     Text("حساب کاربری")
                         .font(.title2.bold())
@@ -161,7 +160,7 @@ private struct ProfileView: View {
                         LoginView()
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(PMColor.primary)
+                    .tint(PMColor.gold)
                 }
                 .padding()
             } else {
@@ -291,9 +290,8 @@ struct LoginView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 18) {
-                Image(systemName: "iphone.gen3")
-                    .font(.system(size: 54))
-                    .foregroundStyle(PMColor.primary)
+                BrandLogoView()
+                    .frame(width: 190, height: 80)
 
                 Text("ورود به \(AppConfig.appName)")
                     .font(.title2.bold())
@@ -338,8 +336,8 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(PMColor.primary)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .foregroundStyle(PMColor.buttonForeground)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
                 .disabled(busy)
             }
