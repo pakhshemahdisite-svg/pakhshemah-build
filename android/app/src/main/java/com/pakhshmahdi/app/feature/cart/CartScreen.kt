@@ -2,29 +2,38 @@ package com.pakhshmahdi.app.feature.cart
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.DeleteSweep
-import androidx.compose.material.icons.outlined.ShoppingBag
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Inventory2
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pakhshmahdi.app.data.cart.CartLine
 import com.pakhshmahdi.app.data.cart.CartStore
 import com.pakhshmahdi.app.data.store.moneyLineTotal
 import com.pakhshmahdi.app.ui.components.PMEmptyState
-import com.pakhshmahdi.app.ui.components.PMPrimaryButton
 import com.pakhshmahdi.app.ui.components.PMScreenTopBar
 import com.pakhshmahdi.app.ui.components.ProductImage
 import com.pakhshmahdi.app.ui.components.toman
+import com.pakhshmahdi.app.ui.theme.PMGoldDeep
+import com.pakhshmahdi.app.ui.theme.PMGoldSoft
 import com.pakhshmahdi.app.ui.theme.PMTheme
 
 @Composable
@@ -34,19 +43,24 @@ fun CartScreen(onCheckout: () -> Unit) {
     var showClearCartDialog by remember { mutableStateOf(false) }
     val subtotalLong = lines.sumOf { line -> moneyLineTotal(line.unitPrice, line.quantity) }
     val subtotal = subtotalLong.toString()
+    val totalQty = lines.sumOf { it.quantity }
 
     Column(
-        Modifier
-            .fillMaxSize()
-            .background(c.background)
+        Modifier.fillMaxSize().background(c.background)
     ) {
         PMScreenTopBar(
             title = "سبد خرید",
-            subtitle = if (lines.isEmpty()) "سبد شما خالی است" else "${lines.sumOf { it.quantity }} کالا",
+            subtitle = if (lines.isEmpty()) "سبد شما خالی است" else "$totalQty کالا • ${lines.size} قلم",
             trailing = {
                 if (lines.isNotEmpty()) {
-                    IconButton(onClick = { showClearCartDialog = true }) {
-                        Icon(Icons.Outlined.DeleteSweep, contentDescription = "پاک کردن سبد", tint = c.error)
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = c.surface,
+                        border = BorderStroke(1.dp, c.border)
+                    ) {
+                        IconButton(onClick = { showClearCartDialog = true }) {
+                            Icon(Icons.Outlined.DeleteSweep, "خالی کردن سبد", tint = c.textPrimary)
+                        }
                     }
                 }
             }
@@ -58,26 +72,20 @@ fun CartScreen(onCheckout: () -> Unit) {
                 title = { Text("پاک کردن سبد خرید") },
                 text = { Text("همه محصولات از سبد خرید حذف شوند؟") },
                 confirmButton = {
-                    TextButton(
-                        onClick = {
-                            CartStore.clear()
-                            showClearCartDialog = false
-                        }
-                    ) {
-                        Text("پاک کردن", color = c.error)
-                    }
+                    TextButton(onClick = {
+                        CartStore.clear()
+                        showClearCartDialog = false
+                    }) { Text("پاک کردن", color = c.error) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showClearCartDialog = false }) {
-                        Text("انصراف")
-                    }
+                    TextButton(onClick = { showClearCartDialog = false }) { Text("انصراف") }
                 }
             )
         }
 
         if (lines.isEmpty()) {
             PMEmptyState(
-                icon = Icons.Outlined.ShoppingBag,
+                icon = Icons.Outlined.ShoppingCart,
                 title = "سبد خرید شما خالی است",
                 message = "محصولات موردنظر را از فروشگاه به سبد خرید اضافه کنید.",
                 modifier = Modifier.fillMaxSize()
@@ -85,79 +93,142 @@ fun CartScreen(onCheckout: () -> Unit) {
         } else {
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                item { WholesaleRulesCard() }
+
                 items(lines, key = { it.key }) { line ->
-                    CartLineCard(line)
+                    PremiumCartLineCard(line)
                 }
 
                 item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                        shape = PMTheme.shapes.card,
-                        color = c.surface,
-                        border = BorderStroke(1.dp, c.border)
-                    ) {
-                        Column(Modifier.padding(16.dp)) {
-                            Text(
-                                "خلاصه سفارش",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Black,
-                                color = c.textPrimary
-                            )
-                            Spacer(Modifier.height(12.dp))
-                            SummaryRow("جمع کالاها", toman(subtotal))
-                            SummaryRow("تخفیف", "در مرحله پرداخت محاسبه می‌شود", secondary = true)
-                            SummaryRow("هزینه ارسال", "پس از انتخاب آدرس", secondary = true)
-                            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = c.border)
-                            SummaryRow("مبلغ فعلی", toman(subtotal), bold = true)
-                        }
-                    }
+                    PremiumOrderSummary(
+                        totalQty = totalQty,
+                        lineCount = lines.size,
+                        subtotal = subtotal
+                    )
                 }
             }
 
             Surface(
                 color = c.surface,
                 border = BorderStroke(1.dp, c.border),
-                shadowElevation = 10.dp
+                shadowElevation = 12.dp
             ) {
-                Column(
-                    Modifier
+                Box(
+                    modifier = Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
                         .padding(12.dp)
-                ) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = PMTheme.shapes.medium,
-                        color = c.surfaceElevated,
-                        border = BorderStroke(1.dp, c.border)
-                    ) {
-                        Row(
-                            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                modifier = Modifier.size(8.dp),
-                                shape = CircleShape,
-                                color = c.accentGold
-                            ) {}
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "شرایط و حداقل‌های خرید از سایت پخش مهدی به‌صورت لحظه‌ای بررسی می‌شود.",
-                                color = c.textSecondary,
-                                style = MaterialTheme.typography.bodySmall
+                        .height(58.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(PMGoldSoft, PMGoldDeep)
                             )
-                        }
+                        )
+                        .clickable(onClick = onCheckout),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            Icons.Outlined.ShoppingCart,
+                            null,
+                            tint = Color(0xFF111111)
+                        )
+                        Spacer(Modifier.width(9.dp))
+                        Text(
+                            "ادامه خرید و ثبت سفارش",
+                            color = Color(0xFF111111),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Black
+                        )
                     }
-                    Spacer(Modifier.height(8.dp))
+                }
+            }
+        }
+    }
+}
 
-                    PMPrimaryButton(
-                        text = "ادامه و تکمیل سفارش",
-                        onClick = onCheckout,
-                        modifier = Modifier.fillMaxWidth(),
-                        icon = Icons.Outlined.ShoppingBag
+@Composable
+private fun WholesaleRulesCard() {
+    val c = PMTheme.colors
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+        shape = RoundedCornerShape(24.dp),
+        color = c.surfaceElevated,
+        border = BorderStroke(1.2.dp, PMGoldDeep.copy(alpha = .55f)),
+        shadowElevation = 4.dp
+    ) {
+        Column(Modifier.padding(15.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    modifier = Modifier.size(50.dp),
+                    shape = CircleShape,
+                    color = c.accentGold.copy(alpha = .68f)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Outlined.ShoppingCart,
+                            null,
+                            tint = Color(0xFF111111),
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
+                }
+                Spacer(Modifier.width(11.dp))
+                Text(
+                    "شرایط خرید عمده",
+                    modifier = Modifier.weight(1f),
+                    color = c.textPrimary,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.End
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+            RuleRow(
+                icon = { Icon(Icons.Outlined.Inventory2, null, tint = PMGoldDeep) },
+                label = "حداقل خرید هر کالا",
+                value = "۶ عدد"
+            )
+            Spacer(Modifier.height(7.dp))
+            RuleRow(
+                icon = { Icon(Icons.Outlined.Payments, null, tint = PMGoldDeep) },
+                label = "حداقل مبلغ سفارش",
+                value = "۱۵,۰۰۰,۰۰۰ تومان"
+            )
+            Spacer(Modifier.height(10.dp))
+
+            Surface(
+                shape = RoundedCornerShape(13.dp),
+                color = c.accentGold.copy(alpha = .18f)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 11.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Outlined.Info,
+                        null,
+                        tint = PMGoldDeep,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(7.dp))
+                    Text(
+                        "برای ادامه خرید، این شرایط باید در سبد رعایت شود. کنترل نهایی توسط فروشگاه انجام می‌شود.",
+                        modifier = Modifier.weight(1f),
+                        color = c.textSecondary,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.End
                     )
                 }
             }
@@ -166,7 +237,31 @@ fun CartScreen(onCheckout: () -> Unit) {
 }
 
 @Composable
-private fun CartLineCard(line: CartLine) {
+private fun RuleRow(
+    icon: @Composable () -> Unit,
+    label: String,
+    value: String
+) {
+    val c = PMTheme.colors
+    Surface(
+        shape = RoundedCornerShape(15.dp),
+        color = c.surface,
+        border = BorderStroke(1.dp, c.border)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(Modifier.size(25.dp), contentAlignment = Alignment.Center) { icon() }
+            Spacer(Modifier.width(8.dp))
+            Text(label, color = c.textSecondary, modifier = Modifier.weight(1f), textAlign = TextAlign.End)
+            Text(value, color = PMGoldDeep, fontWeight = FontWeight.Black)
+        }
+    }
+}
+
+@Composable
+private fun PremiumCartLineCard(line: CartLine) {
     val c = PMTheme.colors
     val maxStock = line.variation?.stockQuantity
         ?: line.product.stockQuantity.takeIf { line.variation == null }
@@ -174,10 +269,10 @@ private fun CartLineCard(line: CartLine) {
     val lineTotal = moneyLineTotal(line.unitPrice, line.quantity).toString()
 
     Surface(
-        shape = PMTheme.shapes.card,
+        shape = RoundedCornerShape(20.dp),
         color = c.surface,
         border = BorderStroke(1.dp, c.border),
-        shadowElevation = 1.dp
+        shadowElevation = 2.dp
     ) {
         Row(
             Modifier.fillMaxWidth().padding(10.dp),
@@ -186,116 +281,128 @@ private fun CartLineCard(line: CartLine) {
             ProductImage(
                 line.variation?.image ?: line.product.image,
                 Modifier
-                    .size(82.dp)
-                    .clip(PMTheme.shapes.medium)
+                    .size(94.dp)
+                    .clip(RoundedCornerShape(16.dp))
             )
-
             Spacer(Modifier.width(11.dp))
 
             Column(Modifier.weight(1f)) {
                 Text(
                     line.product.name,
-                    style = MaterialTheme.typography.titleSmall,
                     color = c.textPrimary,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 2,
+                    textAlign = TextAlign.End
                 )
 
-                if (line.variation != null) {
-                    val variationText = line.variation.attributes.values
-                        .filter { it.isNotBlank() }
-                        .joinToString(" • ")
-                    if (variationText.isNotBlank()) {
-                        Spacer(Modifier.height(3.dp))
-                        Text(
-                            variationText,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = c.textMuted
-                        )
-                    }
+                val variationText = line.variation?.attributes?.values
+                    ?.filter { it.isNotBlank() }
+                    ?.joinToString(" • ")
+                    .orEmpty()
+                if (variationText.isNotBlank()) {
+                    Spacer(Modifier.height(3.dp))
+                    Text(
+                        variationText,
+                        color = c.textMuted,
+                        style = MaterialTheme.typography.labelSmall,
+                        textAlign = TextAlign.End
+                    )
                 }
 
                 Spacer(Modifier.height(6.dp))
-
                 Text(
-                    if (line.quantity > 1) "${toman(lineTotal)} • ${toman(line.unitPrice)} هر عدد" else toman(line.unitPrice),
-                    color = c.primary,
-                    style = MaterialTheme.typography.labelLarge,
+                    toman(line.unitPrice),
+                    color = PMGoldDeep,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Black
                 )
-
                 Spacer(Modifier.height(8.dp))
 
-                Surface(
-                    shape = PMTheme.shapes.pill,
-                    color = c.surfaceElevated,
-                    border = BorderStroke(1.dp, c.border)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = c.accentGold.copy(alpha = .34f),
+                        border = BorderStroke(1.dp, PMGoldDeep.copy(alpha = .30f))
                     ) {
-                        IconButton(
-                            onClick = { CartStore.decrement(line.key) },
-                            modifier = Modifier.size(30.dp)
-                        ) {
-                            Text("−", color = c.textPrimary, fontWeight = FontWeight.Black)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(
+                                onClick = { CartStore.decrement(line.key) },
+                                modifier = Modifier.size(34.dp)
+                            ) {
+                                Text("−", color = c.textPrimary, fontWeight = FontWeight.Black)
+                            }
+                            Text(
+                                line.quantity.toString(),
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                color = c.textPrimary,
+                                fontWeight = FontWeight.Black
+                            )
+                            IconButton(
+                                onClick = { CartStore.increment(line.key) },
+                                enabled = canIncrement,
+                                modifier = Modifier.size(34.dp)
+                            ) {
+                                Text("+", color = c.textPrimary, fontWeight = FontWeight.Black)
+                            }
                         }
-                        Text(
-                            line.quantity.toString(),
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            color = c.textPrimary,
-                            fontWeight = FontWeight.Black
-                        )
-                        IconButton(
-                            onClick = { CartStore.increment(line.key) },
-                            enabled = canIncrement,
-                            modifier = Modifier.size(30.dp)
-                        ) {
-                            Text("+", color = c.textPrimary, fontWeight = FontWeight.Black)
+                    }
+
+                    Spacer(Modifier.weight(1f))
+
+                    Surface(
+                        modifier = Modifier.size(38.dp),
+                        shape = CircleShape,
+                        color = c.surfaceElevated,
+                        border = BorderStroke(1.dp, c.border)
+                    ) {
+                        IconButton(onClick = { CartStore.remove(line.key) }) {
+                            Icon(Icons.Outlined.DeleteOutline, "حذف", tint = PMGoldDeep)
                         }
                     }
                 }
-            }
 
-            Surface(
-                modifier = Modifier.size(38.dp),
-                shape = CircleShape,
-                color = c.error.copy(alpha = .08f)
-            ) {
-                IconButton(onClick = { CartStore.remove(line.key) }) {
-                    Icon(
-                        Icons.Outlined.DeleteOutline,
-                        "حذف",
-                        tint = c.error,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                Spacer(Modifier.height(5.dp))
+                Text(
+                    "جمع: ${toman(lineTotal)}",
+                    color = c.textSecondary,
+                    style = MaterialTheme.typography.labelMedium
+                )
             }
         }
     }
 }
 
 @Composable
-private fun SummaryRow(
-    label: String,
-    value: String,
-    bold: Boolean = false,
-    secondary: Boolean = false
+private fun PremiumOrderSummary(
+    totalQty: Int,
+    lineCount: Int,
+    subtotal: String
 ) {
     val c = PMTheme.colors
-    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
-        Text(
-            label,
-            modifier = Modifier.weight(1f),
-            color = if (bold) c.textPrimary else c.textSecondary,
-            fontWeight = if (bold) FontWeight.Black else FontWeight.Normal
-        )
-        Text(
-            value,
-            color = if (secondary) c.textMuted else c.primary,
-            fontWeight = if (bold) FontWeight.Black else FontWeight.SemiBold,
-            style = if (secondary) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodyMedium
-        )
+    Surface(
+        modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 5.dp),
+        shape = RoundedCornerShape(22.dp),
+        color = c.surfaceElevated,
+        border = BorderStroke(1.dp, c.accentGold.copy(alpha = .35f))
+    ) {
+        Column(Modifier.padding(15.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("مجموع کل", color = c.textSecondary, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        toman(subtotal),
+                        color = PMGoldDeep,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text("تعداد کل کالاها   $totalQty عدد", color = c.textPrimary, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(5.dp))
+                    Text("تعداد اقلام مختلف   $lineCount قلم", color = c.textSecondary)
+                }
+            }
+        }
     }
 }
