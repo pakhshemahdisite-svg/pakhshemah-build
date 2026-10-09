@@ -140,10 +140,10 @@ fun ProfileScreen(
                     Surface(
                         modifier = Modifier.size(40.dp).clickable(onClick = onEdit),
                         shape = CircleShape,
-                        color = c.primary.copy(alpha = .09f)
+                        color = c.accentGold.copy(alpha = .11f)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Icon(Icons.Outlined.Edit, null, tint = c.primary, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Outlined.Edit, null, tint = c.accentGold, modifier = Modifier.size(20.dp))
                         }
                     }
                 }
@@ -300,7 +300,7 @@ private fun ProfileMenuItem(
                 color = c.primary.copy(alpha = .09f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(icon, null, tint = c.primary, modifier = Modifier.size(21.dp))
+                    Icon(icon, null, tint = c.accentGold, modifier = Modifier.size(21.dp))
                 }
             }
             Spacer(Modifier.width(11.dp))
