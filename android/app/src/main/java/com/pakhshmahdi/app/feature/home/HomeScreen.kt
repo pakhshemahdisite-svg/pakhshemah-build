@@ -155,12 +155,12 @@ private fun HomeHeader(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Surface(
-                modifier = Modifier.size(50.dp),
+                modifier = Modifier.width(96.dp).height(46.dp),
                 shape = PMTheme.shapes.medium,
                 color = c.surface,
                 border = BorderStroke(1.dp, c.border)
             ) {
-                BrandLogo(Modifier.padding(6.dp))
+                BrandLogo(Modifier.padding(horizontal = 7.dp, vertical = 5.dp))
             }
 
             Spacer(Modifier.width(10.dp))
@@ -256,66 +256,78 @@ private fun HeroBanner(
             .fillMaxWidth()
             .clickable(onClick = onCatalog),
         shape = PMTheme.shapes.largeCard,
-        color = c.surface,
-        border = BorderStroke(1.dp, c.border),
-        shadowElevation = 2.dp
+        color = c.primaryDark,
+        border = BorderStroke(1.dp, c.accentGold.copy(alpha = .34f)),
+        shadowElevation = 8.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 168.dp)
-                .padding(16.dp),
+                .heightIn(min = 178.dp)
+                .padding(18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(
-                    "خرید عمده از ${AppConfig.APP_NAME}",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = c.accentGold,
-                    fontWeight = FontWeight.Black
-                )
-                Spacer(Modifier.height(7.dp))
+                Surface(
+                    shape = PMTheme.shapes.pill,
+                    color = c.accentGold.copy(alpha = .14f),
+                    border = BorderStroke(1.dp, c.accentGold.copy(alpha = .34f))
+                ) {
+                    Text(
+                        "WHOLESALE · PAKHSH MAHDI",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = c.accentGold,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    )
+                }
+
+                Spacer(Modifier.height(10.dp))
+
                 Text(
                     product?.name ?: AppConfig.APP_SUBTITLE,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = c.textPrimary,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = androidx.compose.ui.graphics.Color.White,
                     fontWeight = FontWeight.Black,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis
                 )
+
                 if (product != null && product.price.isNotBlank()) {
-                    Spacer(Modifier.height(9.dp))
+                    Spacer(Modifier.height(10.dp))
                     Text(
                         toman(product.price),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = c.primary,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = c.accentGold,
                         fontWeight = FontWeight.Black
                     )
                 }
-                Spacer(Modifier.height(10.dp))
+
+                Spacer(Modifier.height(12.dp))
                 Text(
-                    "مشاهده فروشگاه ←",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = c.textSecondary
+                    "مشاهده محصولات  ←",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = androidx.compose.ui.graphics.Color.White.copy(alpha = .84f),
+                    fontWeight = FontWeight.Bold
                 )
             }
 
             Spacer(Modifier.width(14.dp))
 
             Surface(
-                modifier = Modifier.size(132.dp),
+                modifier = Modifier.size(134.dp),
                 shape = PMTheme.shapes.largeCard,
-                color = c.surfaceElevated,
-                border = BorderStroke(1.dp, c.border)
+                color = androidx.compose.ui.graphics.Color.White,
+                border = BorderStroke(1.dp, c.accentGold.copy(alpha = .30f))
             ) {
                 ProductImage(
                     product?.image,
                     Modifier
                         .fillMaxSize()
-                        .padding(7.dp)
+                        .padding(8.dp)
                         .clip(PMTheme.shapes.medium)
                 )
             }
