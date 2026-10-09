@@ -60,11 +60,25 @@ fun PakhshMahdiApp(
         onNotificationOrderConsumed()
     }
 
-    fun go(route: String) {
+    fun goHome() {
+        val returned = nav.popBackStack("home", inclusive = false)
+        if (!returned && current != "home") {
+            nav.navigate("home") {
+                popUpTo("splash") { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
+
+    fun goTopLevel(route: String) {
+        if (route == "home") {
+            goHome()
+            return
+        }
         nav.navigate(route) {
-            popUpTo("home") { saveState = true }
+            popUpTo("home") { inclusive = false }
             launchSingleTop = true
-            restoreState = true
+            restoreState = false
         }
     }
 
@@ -85,12 +99,17 @@ fun PakhshMahdiApp(
                 !current.startsWith("order-tracking/")
             ) {
                 AppBottomBar(
-                    selected = if (current.startsWith("catalog") || current == "categories" || current == "search") "catalog" else current,
-                    onHome = { go("home") },
-                    onCatalog = { go("categories") },
-                    onWishlist = { go("wishlist") },
-                    onCart = { go("cart") },
-                    onProfile = { go("profile") }
+                    selected = when {
+                        current == "home" -> "home"
+                        current.startsWith("catalog") || current == "categories" || current == "search" -> "categories"
+                        current == "cart" -> "cart"
+                        current == "profile" -> "profile"
+                        else -> "home"
+                    },
+                    onHome = { goHome() },
+                    onCatalog = { goTopLevel("categories") },
+                    onCart = { goTopLevel("cart") },
+                    onProfile = { goTopLevel("profile") }
                 )
             }
         }
@@ -116,9 +135,10 @@ fun PakhshMahdiApp(
                     onCatalog = { nav.navigate("catalog") },
                     onCategory = { categoryId -> nav.navigate("catalog/$categoryId") },
                     onSearch = { nav.navigate("search") },
-                    onCategories = { go("categories") },
+                    onCategories = { goTopLevel("categories") },
                     onNotifications = { nav.navigate("notifications") },
-                    onCart = { go("cart") }
+                    onWishlist = { nav.navigate("wishlist") },
+                    onCart = { goTopLevel("cart") }
                 )
             }
             composable("categories") {
