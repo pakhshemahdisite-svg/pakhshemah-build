@@ -176,7 +176,7 @@ fun PMSectionHeader(
         )
         if (!action.isNullOrBlank() && onAction != null) {
             TextButton(onClick = onAction) {
-                Text(action, color = c.primary)
+                Text(action, color = c.accentGold, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -279,8 +279,8 @@ fun PMSelectableCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = PMTheme.shapes.medium,
-        color = if (selected) c.primary.copy(alpha = .10f) else c.surfaceElevated,
-        border = BorderStroke(if (selected) 1.5.dp else 1.dp, if (selected) c.primary else c.border)
+        color = if (selected) c.accentGold.copy(alpha = .10f) else c.surfaceElevated,
+        border = BorderStroke(if (selected) 1.5.dp else 1.dp, if (selected) c.accentGold else c.border)
     ) {
         Row(
             Modifier.padding(14.dp),
@@ -300,7 +300,7 @@ fun PMSelectableCard(
             RadioButton(
                 selected = selected,
                 onClick = onClick,
-                colors = RadioButtonDefaults.colors(selectedColor = c.primary)
+                colors = RadioButtonDefaults.colors(selectedColor = c.accentGold)
             )
         }
     }
@@ -321,8 +321,8 @@ fun PMCheckoutSteps(active: Int, labels: List<String>) {
                 Surface(
                     modifier = Modifier.size(30.dp),
                     shape = CircleShape,
-                    color = if (index <= active) c.primary else c.surfaceElevated,
-                    border = BorderStroke(1.dp, if (index <= active) c.primary else c.border)
+                    color = if (index <= active) c.accentGold else c.surfaceElevated,
+                    border = BorderStroke(1.dp, if (index <= active) c.accentGold else c.border)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Text(
@@ -339,7 +339,7 @@ fun PMCheckoutSteps(active: Int, labels: List<String>) {
                 Text(
                     label,
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (index == active) c.primary else c.textMuted
+                    color = if (index == active) c.accentGold else c.textMuted
                 )
             }
             if (index != labels.lastIndex) {
@@ -348,7 +348,7 @@ fun PMCheckoutSteps(active: Int, labels: List<String>) {
                         .padding(top = 14.dp)
                         .height(1.dp)
                         .weight(.55f)
-                        .background(if (index < active) c.primary else c.border)
+                        .background(if (index < active) c.accentGold else c.border)
                 )
             }
         }
