@@ -58,10 +58,10 @@ enum AppConfig {
         fallback: "https://pakhshemahdi.com/contact-us/"
     )
 
-    static let brandPrimaryHex = info("WLBrandPrimary", fallback: "01082B")
-    static let brandPrimaryDarkHex = info("WLBrandPrimaryDark", fallback: "06142B")
-    static let brandAccentHex = info("WLBrandAccent", fallback: "D5AE57")
-    static let brandDarkBackgroundHex = info("WLBrandDarkBackground", fallback: "01050D")
+    static let brandPrimaryHex = info("WLBrandPrimary", fallback: "111111")
+    static let brandPrimaryDarkHex = info("WLBrandPrimaryDark", fallback: "000000")
+    static let brandAccentHex = info("WLBrandAccent", fallback: "D4AF37")
+    static let brandDarkBackgroundHex = info("WLBrandDarkBackground", fallback: "050505")
 
     static let featureWishlist = bool("WLFeatureWishlist", fallback: true)
     static let featureOTP = bool("WLFeatureOTP", fallback: true)
