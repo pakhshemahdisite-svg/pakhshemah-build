@@ -73,6 +73,11 @@ final class CatalogStore: ObservableObject {
     }
 }
 
+enum WholesalePolicy {
+    static let minimumPerProduct = 6
+    static let minimumOrderTotal = 15_000_000
+}
+
 @MainActor
 final class CartStore: ObservableObject {
     struct Line: Codable, Identifiable, Hashable {
@@ -111,13 +116,38 @@ final class CartStore: ObservableObject {
         }
     }
 
-    func add(_ product: Product, variation: ProductVariation? = nil, quantity: Int = 1) {
+    var wholesaleMessage: String? {
+        guard !lines.isEmpty else { return "سبد خرید خالی است." }
+
+        if let low = lines.first(where: { $0.quantity < WholesalePolicy.minimumPerProduct }) {
+            let remaining = max(0, WholesalePolicy.minimumPerProduct - low.quantity)
+            return "حداقل خرید هر کالا ۶ عدد است. برای «\(low.product.name)» \(remaining) عدد دیگر اضافه کنید."
+        }
+
+        if subtotal < WholesalePolicy.minimumOrderTotal {
+            let remaining = WholesalePolicy.minimumOrderTotal - subtotal
+            return "حداقل مبلغ کل سفارش ۱۵ میلیون تومان است. \(toman(String(remaining))) دیگر به سبد اضافه کنید."
+        }
+
+        return nil
+    }
+
+    var isWholesaleEligible: Bool {
+        !lines.isEmpty && wholesaleMessage == nil
+    }
+
+    func add(_ product: Product, variation: ProductVariation? = nil, quantity: Int = WholesalePolicy.minimumPerProduct) {
         guard quantity > 0, product.purchasable, product.isInStock else { return }
         if (product.type == "variable" || !product.variations.isEmpty) && variation == nil { return }
         if let variation, !variation.isInStock { return }
 
         let id = "\(product.id):\(variation?.id ?? 0)"
         let maxStock = variation?.stockQuantity ?? (variation == nil ? product.stockQuantity : nil)
+        if lines.firstIndex(where: { $0.id == id }) == nil,
+           let maxStock,
+           maxStock < WholesalePolicy.minimumPerProduct {
+            return
+        }
 
         if let index = lines.firstIndex(where: { $0.id == id }) {
             let requested = lines[index].quantity + quantity
@@ -138,8 +168,8 @@ final class CartStore: ObservableObject {
 
     func decrement(_ id: String) {
         guard let index = lines.firstIndex(where: { $0.id == id }) else { return }
-        if lines[index].quantity <= 1 { lines.remove(at: index) }
-        else { lines[index].quantity -= 1 }
+        guard lines[index].quantity > WholesalePolicy.minimumPerProduct else { return }
+        lines[index].quantity -= 1
     }
 
     func remove(_ id: String) {
