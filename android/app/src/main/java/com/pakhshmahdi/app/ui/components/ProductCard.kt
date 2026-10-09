@@ -19,6 +19,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.pakhshmahdi.app.core.AppConfig
+import com.pakhshmahdi.app.data.cart.WholesaleOrderPolicy
 import com.pakhshmahdi.app.data.model.Product
 import com.pakhshmahdi.app.data.wishlist.WishlistStore
 import com.pakhshmahdi.app.ui.theme.PMTheme
@@ -33,7 +34,8 @@ fun ProductCard(
     val c = PMTheme.colors
     val favorite = AppConfig.FEATURE_WISHLIST && WishlistStore.contains(product.id)
     val inStock = product.isInStock &&
-        (product.stockQuantity == null || product.stockQuantity > 0)
+        (product.stockQuantity == null ||
+            product.stockQuantity >= WholesaleOrderPolicy.MINIMUM_PER_PRODUCT)
 
     Surface(
         modifier = modifier.clickable(onClick = onOpen),
