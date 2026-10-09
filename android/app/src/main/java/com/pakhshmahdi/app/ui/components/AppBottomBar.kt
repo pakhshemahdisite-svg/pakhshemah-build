@@ -30,7 +30,7 @@ fun AppBottomBar(
 
     Surface(
         color = c.surface,
-        shadowElevation = 12.dp,
+        shadowElevation = 18.dp,
         border = BorderStroke(1.dp, c.border)
     ) {
         NavigationBar(
@@ -95,9 +95,9 @@ fun AppBottomBar(
 
 @Composable
 private fun navColors() = NavigationBarItemDefaults.colors(
-    selectedIconColor = PMTheme.colors.primary,
-    selectedTextColor = PMTheme.colors.primary,
-    indicatorColor = PMTheme.colors.primary.copy(alpha = .12f),
+    selectedIconColor = PMTheme.colors.accentGold,
+    selectedTextColor = PMTheme.colors.accentGold,
+    indicatorColor = PMTheme.colors.accentGold.copy(alpha = .14f),
     unselectedIconColor = PMTheme.colors.textMuted,
     unselectedTextColor = PMTheme.colors.textMuted
 )
