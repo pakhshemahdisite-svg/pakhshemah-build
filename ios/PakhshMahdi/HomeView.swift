@@ -80,28 +80,27 @@ struct HomeView: View {
 
     private var header: some View {
         VStack(alignment: .trailing, spacing: 12) {
-            HStack {
+            HStack(spacing: 12) {
                 NavigationLink {
                     CatalogView()
                 } label: {
                     Image(systemName: "magnifyingglass")
                         .font(.title3)
                         .foregroundStyle(PMColor.primary)
-                        .frame(width: 42, height: 42)
+                        .frame(width: 44, height: 44)
                         .background(PMColor.surface)
                         .clipShape(Circle())
-                        .overlay(Circle().stroke(PMColor.border.opacity(0.7), lineWidth: 1))
+                        .overlay(Circle().stroke(PMColor.border, lineWidth: 1))
                 }
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(AppConfig.appName)
-                        .font(.title2.bold())
-                        .foregroundStyle(PMColor.primary)
-                    Text(AppConfig.appSubtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                VStack(alignment: .trailing, spacing: 3) {
+                    BrandLogoView()
+                        .frame(width: 118, height: 43)
+                    Text("عمده‌فروشی تخصصی لوازم آشپزخانه")
+                        .font(.caption2)
+                        .foregroundStyle(PMColor.secondary)
                 }
             }
 
@@ -110,18 +109,18 @@ struct HomeView: View {
             } label: {
                 HStack {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(PMColor.muted)
                     Text("جستجوی محصولات، دسته‌ها و برندها...")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(PMColor.muted)
                     Spacer()
                 }
                 .padding(.horizontal, 14)
-                .frame(height: 48)
+                .frame(height: 50)
                 .background(PMColor.surface)
-                .clipShape(RoundedRectangle(cornerRadius: 15))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(PMColor.border.opacity(0.7), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(PMColor.border, lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)
@@ -132,33 +131,45 @@ struct HomeView: View {
 
     private func hero(product: Product) -> some View {
         NavigationLink(value: product) {
-            HStack(spacing: 12) {
-                VStack(alignment: .trailing, spacing: 8) {
-                    Text("انتخاب‌های ویژه \(AppConfig.appName)")
-                        .font(.caption.bold())
-                        .foregroundStyle(Color(hex: 0x9A741C))
+            HStack(spacing: 14) {
+                VStack(alignment: .trailing, spacing: 9) {
+                    Text("WHOLESALE · PAKHSH MAHDI")
+                        .font(.caption2.bold())
+                        .foregroundStyle(PMColor.gold)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(PMColor.gold.opacity(0.12))
+                        .clipShape(Capsule())
+
                     Text(product.name)
                         .font(.title3.bold())
-                        .foregroundStyle(PMColor.primary)
-                        .lineLimit(2)
+                        .foregroundStyle(.white)
+                        .lineLimit(3)
                         .multilineTextAlignment(.trailing)
+
                     Text(toman(product.price))
-                        .font(.subheadline.bold())
-                        .foregroundStyle(PMColor.primary)
+                        .font(.headline.bold())
+                        .foregroundStyle(PMColor.gold)
+
+                    Text("مشاهده محصول  ←")
+                        .font(.caption.bold())
+                        .foregroundStyle(.white.opacity(0.78))
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
 
                 ProductImageView(url: product.image)
-                    .frame(width: 130, height: 120)
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .frame(width: 132, height: 128)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
             }
-            .padding(16)
-            .background(PMColor.surface)
-            .clipShape(RoundedRectangle(cornerRadius: 22))
+            .padding(18)
+            .background(PMColor.pureBlack)
+            .clipShape(RoundedRectangle(cornerRadius: 26))
             .overlay(
-                RoundedRectangle(cornerRadius: 22)
-                    .stroke(PMColor.border.opacity(0.7), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 26)
+                    .stroke(PMColor.gold.opacity(0.34), lineWidth: 1)
             )
+            .shadow(color: .black.opacity(0.12), radius: 16, y: 8)
             .padding(.horizontal)
         }
         .buttonStyle(.plain)
@@ -184,7 +195,7 @@ struct HomeView: View {
             Spacer()
             Text(title)
                 .font(.title3.bold())
-                .foregroundStyle(PMColor.primary)
+                .foregroundStyle(.primary)
         }
         .padding(.horizontal)
         .padding(.top, 4)
