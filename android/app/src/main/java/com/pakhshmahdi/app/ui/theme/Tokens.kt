@@ -18,18 +18,18 @@ data class PMDimensions(
     val space32: Dp = 32.dp,
     val screenPadding: Dp = 16.dp,
     val bottomBarHeight: Dp = 72.dp,
-    val buttonHeight: Dp = 54.dp,
-    val cardRadius: Dp = 18.dp,
-    val largeCardRadius: Dp = 24.dp,
-    val buttonRadius: Dp = 14.dp,
-    val fieldRadius: Dp = 14.dp
+    val buttonHeight: Dp = 56.dp,
+    val cardRadius: Dp = 20.dp,
+    val largeCardRadius: Dp = 28.dp,
+    val buttonRadius: Dp = 16.dp,
+    val fieldRadius: Dp = 16.dp
 )
 
 data class PMShapes(
-    val small: RoundedCornerShape = RoundedCornerShape(10.dp),
-    val medium: RoundedCornerShape = RoundedCornerShape(14.dp),
-    val card: RoundedCornerShape = RoundedCornerShape(18.dp),
-    val largeCard: RoundedCornerShape = RoundedCornerShape(24.dp),
+    val small: RoundedCornerShape = RoundedCornerShape(12.dp),
+    val medium: RoundedCornerShape = RoundedCornerShape(16.dp),
+    val card: RoundedCornerShape = RoundedCornerShape(20.dp),
+    val largeCard: RoundedCornerShape = RoundedCornerShape(28.dp),
     val pill: RoundedCornerShape = RoundedCornerShape(50)
 )
 
