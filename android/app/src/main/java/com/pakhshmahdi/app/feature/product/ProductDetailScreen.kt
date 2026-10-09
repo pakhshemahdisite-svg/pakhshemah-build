@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pakhshmahdi.app.core.AppConfig
 import com.pakhshmahdi.app.data.cart.CartStore
+import com.pakhshmahdi.app.data.cart.WholesaleOrderPolicy
 import com.pakhshmahdi.app.data.model.ProductVariation
 import com.pakhshmahdi.app.data.recent.RecentlyViewedStore
 import com.pakhshmahdi.app.data.wishlist.WishlistStore
@@ -84,7 +85,7 @@ fun ProductDetailScreen(
         )
     }
     val selectedVariation = product.variations.firstOrNull { it.id == selectedVariationId }
-    var quantity by remember(product.id, selectedVariationId) { mutableIntStateOf(1) }
+    var quantity by remember(product.id, selectedVariationId) { mutableIntStateOf(WholesaleOrderPolicy.MINIMUM_PER_PRODUCT) }
     var selectedImage by remember(product.id) { mutableStateOf(product.image) }
 
     LaunchedEffect(selectedVariationId) {
@@ -103,8 +104,12 @@ fun ProductDetailScreen(
     val salePrice = selectedVariation?.salePrice ?: product.salePrice
     val maxQuantity = selectedVariation?.stockQuantity
         ?: product.stockQuantity.takeIf { selectedVariation == null }
-    val inStock = selectedVariation?.stockStatus?.let { it == "instock" }
-        ?: (product.isInStock && (maxQuantity == null || maxQuantity > 0))
+    val inStock = selectedVariation?.stockStatus?.let { status ->
+        status == "instock" && (maxQuantity == null || maxQuantity >= WholesaleOrderPolicy.MINIMUM_PER_PRODUCT)
+    } ?: (
+        product.isInStock &&
+            (maxQuantity == null || maxQuantity >= WholesaleOrderPolicy.MINIMUM_PER_PRODUCT)
+    )
     val canIncreaseQuantity = maxQuantity == null || quantity < maxQuantity
     val favorite = AppConfig.FEATURE_WISHLIST && WishlistStore.contains(product.id)
 
@@ -386,7 +391,7 @@ fun ProductDetailScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         FilledTonalIconButton(
-                            onClick = { if (quantity > 1) quantity-- },
+                            onClick = { if (quantity > WholesaleOrderPolicy.MINIMUM_PER_PRODUCT) quantity-- },
                             colors = IconButtonDefaults.filledTonalIconButtonColors(
                                 containerColor = c.surfaceElevated,
                                 contentColor = c.textPrimary
@@ -431,7 +436,7 @@ fun ProductDetailScreen(
                     border = BorderStroke(1.dp, c.primary.copy(alpha = .16f))
                 ) {
                     Text(
-                        "شرایط خرید عمده: حداقل ۶ عدد کالا در سبد یا حداقل مبلغ سفارش ۱۵ میلیون تومان",
+                        "شرایط خرید عمده: از هر کالا حداقل ۶ عدد و حداقل مبلغ کل سفارش ۱۵ میلیون تومان",
                         style = MaterialTheme.typography.bodySmall,
                         color = c.textSecondary,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
@@ -518,7 +523,8 @@ private fun VariationOption(
             Column(Modifier.weight(1f)) {
                 Text(label, color = c.textPrimary, fontWeight = FontWeight.Bold)
                 val variationInStock = variation.stockStatus == "instock" &&
-                    (variation.stockQuantity == null || variation.stockQuantity > 0)
+                    (variation.stockQuantity == null ||
+                        variation.stockQuantity >= WholesaleOrderPolicy.MINIMUM_PER_PRODUCT)
                 Text(
                     when {
                         !variationInStock -> "ناموجود"
