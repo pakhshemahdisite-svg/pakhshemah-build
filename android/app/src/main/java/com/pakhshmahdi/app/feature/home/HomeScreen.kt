@@ -7,22 +7,30 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.NotificationsNone
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.pakhshmahdi.app.core.AppConfig
 import com.pakhshmahdi.app.data.cart.CartStore
 import com.pakhshmahdi.app.data.model.Category
@@ -33,8 +41,15 @@ import com.pakhshmahdi.app.ui.components.PMErrorState
 import com.pakhshmahdi.app.ui.components.PMSectionHeader
 import com.pakhshmahdi.app.ui.components.ProductCard
 import com.pakhshmahdi.app.ui.components.ProductImage
-import com.pakhshmahdi.app.ui.components.toman
+import com.pakhshmahdi.app.ui.theme.PMGoldDeep
 import com.pakhshmahdi.app.ui.theme.PMTheme
+import kotlinx.coroutines.delay
+
+private val approvedBanners = listOf(
+    "https://raw.githubusercontent.com/pakhshemahdisite-svg/pakhshemah-build/main/assets/app-ui/home-banner-1.jpg",
+    "https://raw.githubusercontent.com/pakhshemahdisite-svg/pakhshemah-build/main/assets/app-ui/home-banner-2.jpg",
+    "https://raw.githubusercontent.com/pakhshemahdisite-svg/pakhshemah-build/main/assets/app-ui/home-banner-3.jpg"
+)
 
 @Composable
 fun HomeScreen(
@@ -44,6 +59,7 @@ fun HomeScreen(
     onSearch: () -> Unit,
     onCategories: () -> Unit,
     onNotifications: () -> Unit,
+    onWishlist: () -> Unit,
     onCart: () -> Unit
 ) {
     val c = PMTheme.colors
@@ -70,26 +86,19 @@ fun HomeScreen(
     }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.background),
+        modifier = Modifier.fillMaxSize().background(c.background),
         contentPadding = PaddingValues(bottom = 26.dp)
     ) {
         item {
-            HomeHeader(
+            PremiumHomeHeader(
                 onSearch = onSearch,
                 onNotifications = onNotifications,
+                onWishlist = onWishlist,
                 onCart = onCart
             )
         }
 
-        item {
-            HeroBanner(
-                product = state.data.featuredProducts.firstOrNull()
-                    ?: state.data.latestProducts.firstOrNull(),
-                onCatalog = onCatalog
-            )
-        }
+        item { ApprovedHeroSlider(onCatalog = onCatalog) }
 
         if (state.data.categories.isNotEmpty()) {
             item {
@@ -97,15 +106,13 @@ fun HomeScreen(
                     PMSectionHeader("دسته‌بندی‌ها", "مشاهده همه", onCategories)
                 }
             }
-            item {
-                CategoryRow(state.data.categories, onCategory)
-            }
+            item { PremiumCategoryRow(state.data.categories, onCategory, onCategories) }
         }
 
         if (state.data.featuredProducts.isNotEmpty()) {
             item {
                 Box(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                    PMSectionHeader("پرفروش و منتخب", "مشاهده همه", onCatalog)
+                    PMSectionHeader("پیشنهاد ویژه", "مشاهده همه", onCatalog)
                 }
             }
             item { ProductRow(state.data.featuredProducts, onProduct) }
@@ -114,7 +121,7 @@ fun HomeScreen(
         if (state.data.onSaleProducts.isNotEmpty()) {
             item {
                 Box(Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-                    PMSectionHeader("پیشنهادهای ویژه", "مشاهده همه", onCatalog)
+                    PMSectionHeader("تخفیف‌های منتخب", "مشاهده همه", onCatalog)
                 }
             }
             item { ProductRow(state.data.onSaleProducts, onProduct) }
@@ -139,9 +146,10 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeHeader(
+private fun PremiumHomeHeader(
     onSearch: () -> Unit,
     onNotifications: () -> Unit,
+    onWishlist: () -> Unit,
     onCart: () -> Unit
 ) {
     val c = PMTheme.colors
@@ -151,225 +159,272 @@ private fun HomeHeader(
         Modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                modifier = Modifier.size(50.dp),
-                shape = PMTheme.shapes.medium,
-                color = c.surface,
-                border = BorderStroke(1.dp, c.border)
-            ) {
-                BrandLogo(Modifier.padding(6.dp))
-            }
-
-            Spacer(Modifier.width(10.dp))
-
-            Column(Modifier.weight(1f)) {
+        Box(
+            modifier = Modifier.fillMaxWidth().height(94.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                BrandLogo(Modifier.width(104.dp).height(64.dp))
                 Text(
-                    AppConfig.APP_NAME,
-                    style = MaterialTheme.typography.titleLarge,
+                    "پخش مهدی",
                     color = c.textPrimary,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Black
                 )
-                Text(
-                    AppConfig.APP_SUBTITLE,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = c.textSecondary
-                )
             }
 
-            if (AppConfig.FEATURE_NOTIFICATIONS) {
-                Surface(
-                    modifier = Modifier.size(42.dp),
-                    shape = CircleShape,
-                    color = c.surface,
-                    border = BorderStroke(1.dp, c.border)
-                ) {
-                    IconButton(onClick = onNotifications) {
-                        Icon(Icons.Outlined.NotificationsNone, null, tint = c.textPrimary)
-                    }
-                }
-
-                Spacer(Modifier.width(7.dp))
-            }
-
-            Surface(
-                modifier = Modifier.size(42.dp),
-                shape = CircleShape,
-                color = c.surface,
-                border = BorderStroke(1.dp, c.border)
-            ) {
-                BadgedBox(
-                    badge = {
-                        if (cartCount > 0) {
-                            Badge(
-                                containerColor = c.accentGold,
-                                contentColor = c.primaryDark
-                            ) { Text(cartCount.coerceAtMost(99).toString()) }
-                        }
-                    }
-                ) {
-                    IconButton(onClick = onCart) {
-                        Icon(Icons.Outlined.ShoppingBag, null, tint = c.textPrimary)
-                    }
-                }
-            }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Surface(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onSearch),
-            shape = PMTheme.shapes.medium,
-            color = c.surfaceElevated,
-            border = BorderStroke(1.dp, c.border)
-        ) {
             Row(
-                Modifier.padding(horizontal = 14.dp, vertical = 13.dp),
+                modifier = Modifier.align(Alignment.CenterStart),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                if (AppConfig.FEATURE_NOTIFICATIONS) {
+                    HeaderCircleButton(onClick = onNotifications) {
+                        Icon(Icons.Outlined.NotificationsNone, "اطلاعیه‌ها", tint = c.textPrimary)
+                    }
+                }
+                if (AppConfig.FEATURE_WISHLIST) {
+                    HeaderCircleButton(onClick = onWishlist) {
+                        Icon(Icons.Outlined.FavoriteBorder, "علاقه‌مندی", tint = c.textPrimary)
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.align(Alignment.CenterEnd),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Outlined.Search, null, tint = c.textMuted)
-                Spacer(Modifier.width(9.dp))
+                Icon(Icons.Outlined.LocationOn, null, tint = c.textPrimary, modifier = Modifier.size(21.dp))
+                Spacer(Modifier.width(3.dp))
+                Text("تهران", color = c.textPrimary, fontWeight = FontWeight.SemiBold)
+            }
+        }
+
+        Spacer(Modifier.height(5.dp))
+
+        Surface(
+            modifier = Modifier.fillMaxWidth().clickable(onClick = onSearch),
+            shape = RoundedCornerShape(18.dp),
+            color = c.surface,
+            border = BorderStroke(1.2.dp, PMGoldDeep)
+        ) {
+            Row(
+                Modifier.padding(horizontal = 15.dp, vertical = 13.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Outlined.Search, null, tint = c.textPrimary)
+                Spacer(Modifier.width(10.dp))
                 Text(
-                    "جستجوی محصولات، دسته‌ها و برندها...",
+                    "جستجوی محصول، برند، دسته‌بندی ...",
                     color = c.textMuted,
-                    style = MaterialTheme.typography.bodyMedium
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.End
                 )
+                if (cartCount > 0) {
+                    Surface(
+                        modifier = Modifier.size(26.dp).clickable(onClick = onCart),
+                        shape = CircleShape,
+                        color = c.accentGold
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                cartCount.coerceAtMost(99).toString(),
+                                color = c.primaryDark,
+                                fontWeight = FontWeight.Black,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun HeroBanner(
-    product: Product?,
-    onCatalog: () -> Unit
+private fun HeaderCircleButton(
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val c = PMTheme.colors
-
     Surface(
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .fillMaxWidth()
-            .clickable(onClick = onCatalog),
-        shape = PMTheme.shapes.largeCard,
+        modifier = Modifier.size(39.dp),
+        shape = CircleShape,
         color = c.surface,
-        border = BorderStroke(1.dp, c.border),
-        shadowElevation = 2.dp
+        border = BorderStroke(1.dp, c.border)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 168.dp)
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    "خرید عمده از ${AppConfig.APP_NAME}",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = c.accentGold,
-                    fontWeight = FontWeight.Black
-                )
-                Spacer(Modifier.height(7.dp))
-                Text(
-                    product?.name ?: AppConfig.APP_SUBTITLE,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = c.textPrimary,
-                    fontWeight = FontWeight.Black,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
-                if (product != null && product.price.isNotBlank()) {
-                    Spacer(Modifier.height(9.dp))
-                    Text(
-                        toman(product.price),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = c.primary,
-                        fontWeight = FontWeight.Black
-                    )
-                }
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    "مشاهده فروشگاه ←",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = c.textSecondary
-                )
-            }
+        IconButton(onClick = onClick, content = content)
+    }
+}
 
-            Spacer(Modifier.width(14.dp))
+@Composable
+private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
+    val c = PMTheme.colors
+    val pagerState = rememberPagerState(pageCount = { approvedBanners.size })
 
-            Surface(
-                modifier = Modifier.size(132.dp),
-                shape = PMTheme.shapes.largeCard,
-                color = c.surfaceElevated,
-                border = BorderStroke(1.dp, c.border)
+    LaunchedEffect(pagerState.currentPage) {
+        delay(4500)
+        pagerState.animateScrollToPage((pagerState.currentPage + 1) % approvedBanners.size)
+    }
+
+    Column {
+        HorizontalPager(
+            state = pagerState,
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            pageSpacing = 9.dp
+        ) { page ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(218.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .clickable(onClick = onCatalog)
             ) {
-                ProductImage(
-                    product?.image,
-                    Modifier
+                AsyncImage(
+                    model = approvedBanners[page],
+                    contentDescription = "بنر پخش مهدی ${page + 1}",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+
+                Box(
+                    modifier = Modifier
                         .fillMaxSize()
-                        .padding(7.dp)
-                        .clip(PMTheme.shapes.medium)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    Color.White.copy(alpha = .96f),
+                                    Color.White.copy(alpha = .74f),
+                                    Color.Transparent
+                                )
+                            )
+                        )
                 )
+
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .width(190.dp)
+                        .padding(start = 18.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        "کیفیت در\nهر آشپزخانه",
+                        color = Color(0xFF101010),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        lineHeight = MaterialTheme.typography.headlineMedium.lineHeight
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "انتخاب حرفه‌ای‌ها\nبا پخش مهدی",
+                        color = Color(0xFF3E3A33),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = c.accentGold,
+                        border = BorderStroke(1.dp, PMGoldDeep.copy(alpha = .45f))
+                    ) {
+                        Text(
+                            "مشاهده محصولات  ‹",
+                            modifier = Modifier.padding(horizontal = 13.dp, vertical = 8.dp),
+                            color = c.primaryDark,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 9.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            approvedBanners.indices.forEach { index ->
+                Surface(
+                    modifier = Modifier
+                        .padding(horizontal = 3.dp)
+                        .width(if (pagerState.currentPage == index) 22.dp else 8.dp)
+                        .height(7.dp),
+                    shape = CircleShape,
+                    color = if (pagerState.currentPage == index) PMGoldDeep else c.border
+                ) {}
             }
         }
     }
 }
 
 @Composable
-private fun CategoryRow(
+private fun PremiumCategoryRow(
     categories: List<Category>,
-    onCategory: (Long) -> Unit
+    onCategory: (Long) -> Unit,
+    onAll: () -> Unit
 ) {
+    val c = PMTheme.colors
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        items(categories.take(10), key = { it.id }) { category ->
-            CategoryItem(category = category, onClick = { onCategory(category.id) })
+        item {
+            Column(
+                modifier = Modifier.width(78.dp).clickable(onClick = onAll),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Surface(
+                    modifier = Modifier.size(66.dp),
+                    shape = CircleShape,
+                    color = c.accentGold.copy(alpha = .22f),
+                    border = BorderStroke(1.dp, PMGoldDeep.copy(alpha = .28f))
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("▦", color = c.textPrimary, fontSize = MaterialTheme.typography.headlineSmall.fontSize)
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "همه دسته‌بندی‌ها",
+                    color = c.textPrimary,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2
+                )
+            }
         }
-    }
-}
 
-@Composable
-private fun CategoryItem(
-    category: Category,
-    onClick: () -> Unit
-) {
-    val c = PMTheme.colors
-    Column(
-        modifier = Modifier
-            .width(82.dp)
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Surface(
-            modifier = Modifier.size(70.dp),
-            shape = CircleShape,
-            color = c.surface,
-            border = BorderStroke(1.dp, c.border),
-            shadowElevation = 1.dp
-        ) {
-            ProductImage(
-                category.image,
-                Modifier.fillMaxSize().padding(5.dp).clip(CircleShape)
-            )
+        items(categories.take(8), key = { it.id }) { category ->
+            Column(
+                modifier = Modifier.width(78.dp).clickable { onCategory(category.id) },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Surface(
+                    modifier = Modifier.size(66.dp),
+                    shape = CircleShape,
+                    color = c.surfaceElevated,
+                    border = BorderStroke(1.dp, c.border)
+                ) {
+                    ProductImage(
+                        category.image,
+                        Modifier.fillMaxSize().padding(4.dp).clip(CircleShape)
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    category.name,
+                    color = c.textPrimary,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
-        Spacer(Modifier.height(7.dp))
-        Text(
-            category.name,
-            style = MaterialTheme.typography.labelMedium,
-            color = c.textPrimary,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
     }
 }
 
@@ -403,28 +458,12 @@ private fun HomeSkeleton() {
             .statusBarsPadding()
             .padding(16.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                modifier = Modifier.size(50.dp),
-                shape = PMTheme.shapes.medium,
-                color = c.surfaceElevated
-            ) {}
-            Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f)) {
-                Surface(
-                    modifier = Modifier.width(120.dp).height(18.dp),
-                    shape = PMTheme.shapes.pill,
-                    color = c.surfaceElevated
-                ) {}
-                Spacer(Modifier.height(7.dp))
-                Surface(
-                    modifier = Modifier.width(190.dp).height(11.dp),
-                    shape = PMTheme.shapes.pill,
-                    color = c.surfaceElevated
-                ) {}
-            }
-        }
-        Spacer(Modifier.height(16.dp))
+        Surface(
+            modifier = Modifier.fillMaxWidth().height(105.dp),
+            shape = PMTheme.shapes.card,
+            color = c.surfaceElevated
+        ) {}
+        Spacer(Modifier.height(12.dp))
         Surface(
             modifier = Modifier.fillMaxWidth().height(48.dp),
             shape = PMTheme.shapes.medium,
@@ -432,14 +471,14 @@ private fun HomeSkeleton() {
         ) {}
         Spacer(Modifier.height(14.dp))
         Surface(
-            modifier = Modifier.fillMaxWidth().height(190.dp),
+            modifier = Modifier.fillMaxWidth().height(218.dp),
             shape = PMTheme.shapes.largeCard,
             color = c.surfaceElevated
         ) {}
-        Spacer(Modifier.height(24.dp))
-        repeat(4) {
+        Spacer(Modifier.height(22.dp))
+        repeat(3) {
             Surface(
-                modifier = Modifier.fillMaxWidth().height(72.dp).padding(bottom = 10.dp),
+                modifier = Modifier.fillMaxWidth().height(76.dp).padding(bottom = 10.dp),
                 shape = PMTheme.shapes.card,
                 color = c.surfaceElevated
             ) {}
