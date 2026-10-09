@@ -6,7 +6,6 @@ import com.pakhshmahdi.app.data.auth.AuthRepository
 import com.pakhshmahdi.app.data.auth.AuthStore
 import com.pakhshmahdi.app.data.cart.CartLine
 import com.pakhshmahdi.app.data.cart.CartStore
-import com.pakhshmahdi.app.data.cart.WholesaleOrderPolicy
 import com.pakhshmahdi.app.data.local.LocalStore
 import com.pakhshmahdi.app.data.store.CheckoutRepository
 import com.pakhshmahdi.app.data.store.PendingPayment
@@ -66,10 +65,6 @@ class CheckoutViewModel : ViewModel() {
             runCatching {
                 val refreshedLines = repository.refreshLines(lines)
                 CartStore.replaceAll(refreshedLines)
-
-                WholesaleOrderPolicy.message(refreshedLines)?.let { message ->
-                    throw StoreApiException(message)
-                }
 
                 repository.prepareCart(refreshedLines)
             }.onSuccess { cart ->

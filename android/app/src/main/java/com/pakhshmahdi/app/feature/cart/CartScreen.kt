@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pakhshmahdi.app.data.cart.CartLine
 import com.pakhshmahdi.app.data.cart.CartStore
-import com.pakhshmahdi.app.data.cart.WholesaleOrderPolicy
 import com.pakhshmahdi.app.data.store.moneyLineTotal
 import com.pakhshmahdi.app.ui.components.PMEmptyState
 import com.pakhshmahdi.app.ui.components.PMPrimaryButton
@@ -33,9 +32,8 @@ fun CartScreen(onCheckout: () -> Unit) {
     val c = PMTheme.colors
     val lines = CartStore.lines
     var showClearCartDialog by remember { mutableStateOf(false) }
-    val subtotalLong = WholesaleOrderPolicy.subtotal(lines)
+    val subtotalLong = lines.sumOf { line -> moneyLineTotal(line.unitPrice, line.quantity) }
     val subtotal = subtotalLong.toString()
-    val wholesaleMessage = WholesaleOrderPolicy.message(lines)
 
     Column(
         Modifier
@@ -130,28 +128,35 @@ fun CartScreen(onCheckout: () -> Unit) {
                         .navigationBarsPadding()
                         .padding(12.dp)
                 ) {
-                    if (wholesaleMessage != null) {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = PMTheme.shapes.medium,
-                            color = c.primary.copy(alpha = .07f),
-                            border = BorderStroke(1.dp, c.primary.copy(alpha = .18f))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = PMTheme.shapes.medium,
+                        color = c.surfaceElevated,
+                        border = BorderStroke(1.dp, c.border)
+                    ) {
+                        Row(
+                            Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Surface(
+                                modifier = Modifier.size(8.dp),
+                                shape = CircleShape,
+                                color = c.accentGold
+                            ) {}
+                            Spacer(Modifier.width(8.dp))
                             Text(
-                                wholesaleMessage,
+                                "شرایط و حداقل‌های خرید از سایت پخش مهدی به‌صورت لحظه‌ای بررسی می‌شود.",
                                 color = c.textSecondary,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(11.dp)
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
-                        Spacer(Modifier.height(8.dp))
                     }
+                    Spacer(Modifier.height(8.dp))
 
                     PMPrimaryButton(
                         text = "ادامه و تکمیل سفارش",
                         onClick = onCheckout,
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = wholesaleMessage == null,
                         icon = Icons.Outlined.ShoppingBag
                     )
                 }

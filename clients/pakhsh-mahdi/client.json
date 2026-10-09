@@ -13,10 +13,10 @@
   "androidFlavor": "pakhshMahdi",
   "iosScheme": "PakhshMahdi",
   "branding": {
-    "primary": "#0B2A57",
-    "primaryDark": "#071C3C",
-    "accent": "#D7A84B",
-    "darkBackground": "#04111E"
+    "primary": "#111111",
+    "primaryDark": "#000000",
+    "accent": "#D4AF37",
+    "darkBackground": "#050505"
   },
   "features": {
     "wishlist": true,

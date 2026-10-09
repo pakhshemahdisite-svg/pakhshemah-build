@@ -103,8 +103,12 @@ fun ProductDetailScreen(
     val salePrice = selectedVariation?.salePrice ?: product.salePrice
     val maxQuantity = selectedVariation?.stockQuantity
         ?: product.stockQuantity.takeIf { selectedVariation == null }
-    val inStock = selectedVariation?.stockStatus?.let { it == "instock" }
-        ?: (product.isInStock && (maxQuantity == null || maxQuantity > 0))
+    val inStock = selectedVariation?.stockStatus?.let { status ->
+        status == "instock" && (maxQuantity == null || maxQuantity > 0)
+    } ?: (
+        product.isInStock &&
+            (maxQuantity == null || maxQuantity > 0)
+    )
     val canIncreaseQuantity = maxQuantity == null || quantity < maxQuantity
     val favorite = AppConfig.FEATURE_WISHLIST && WishlistStore.contains(product.id)
 
@@ -427,11 +431,11 @@ fun ProductDetailScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = PMTheme.shapes.medium,
-                    color = c.primary.copy(alpha = .06f),
-                    border = BorderStroke(1.dp, c.primary.copy(alpha = .16f))
+                    color = c.accentGold.copy(alpha = .08f),
+                    border = BorderStroke(1.dp, c.accentGold.copy(alpha = .28f))
                 ) {
                     Text(
-                        "شرایط خرید عمده: حداقل ۶ عدد کالا در سبد یا حداقل مبلغ سفارش ۱۵ میلیون تومان",
+                        "شرایط خرید و حداقل‌های سفارش مستقیماً از سایت پخش مهدی بررسی می‌شود و در مرحله سبد/تسویه به‌روز نمایش داده خواهد شد.",
                         style = MaterialTheme.typography.bodySmall,
                         color = c.textSecondary,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
@@ -518,7 +522,8 @@ private fun VariationOption(
             Column(Modifier.weight(1f)) {
                 Text(label, color = c.textPrimary, fontWeight = FontWeight.Bold)
                 val variationInStock = variation.stockStatus == "instock" &&
-                    (variation.stockQuantity == null || variation.stockQuantity > 0)
+                    (variation.stockQuantity == null ||
+                        variation.stockQuantity > 0)
                 Text(
                     when {
                         !variationInStock -> "ناموجود"

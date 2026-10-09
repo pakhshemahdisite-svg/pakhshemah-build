@@ -6,7 +6,11 @@ struct ProductCardView: View {
     @EnvironmentObject private var wishlist: WishlistStore
 
     private var canQuickAdd: Bool {
-        product.purchasable && product.isInStock && product.type != "variable" && product.variations.isEmpty
+        product.purchasable &&
+        product.isInStock &&
+        (product.stockQuantity == nil || product.stockQuantity! > 0) &&
+        product.type != "variable" &&
+        product.variations.isEmpty
     }
 
     var body: some View {
@@ -24,7 +28,7 @@ struct ProductCardView: View {
                             } label: {
                                 Image(systemName: wishlist.contains(product.id) ? "heart.fill" : "heart")
                                     .font(.caption.bold())
-                                    .foregroundStyle(wishlist.contains(product.id) ? .red : PMColor.primary)
+                                    .foregroundStyle(wishlist.contains(product.id) ? .red : PMColor.gold)
                                     .frame(width: 32, height: 32)
                                     .background(PMColor.surface.opacity(0.94))
                                     .clipShape(Circle())
@@ -40,10 +44,10 @@ struct ProductCardView: View {
                 if product.hasSale {
                     Text("تخفیف")
                         .font(.caption2.bold())
-                        .foregroundStyle(PMColor.primary)
+                        .foregroundStyle(PMColor.pureBlack)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color(hex: 0xD5AE57))
+                        .background(PMColor.gold)
                         .clipShape(Capsule())
                         .padding(7)
                 }
@@ -78,7 +82,7 @@ struct ProductCardView: View {
                         cart.add(product)
                     } label: {
                         Image(systemName: "cart.badge.plus")
-                            .foregroundStyle(.white)
+                            .foregroundStyle(PMColor.buttonForeground)
                             .padding(10)
                             .background(PMColor.primary)
                             .clipShape(Circle())
@@ -86,7 +90,7 @@ struct ProductCardView: View {
                     .disabled(!product.isInStock || !product.purchasable)
                 } else {
                     Image(systemName: "chevron.left")
-                        .foregroundStyle(.white)
+                        .foregroundStyle(PMColor.buttonForeground)
                         .padding(10)
                         .background((product.isInStock && product.purchasable) ? PMColor.primary : Color.gray)
                         .clipShape(Circle())
@@ -96,7 +100,7 @@ struct ProductCardView: View {
 
                 Text(toman(product.price))
                     .fontWeight(.bold)
-                    .foregroundStyle(PMColor.primary)
+                    .foregroundStyle(PMColor.gold)
                     .lineLimit(1)
             }
         }
@@ -105,7 +109,7 @@ struct ProductCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .overlay(
             RoundedRectangle(cornerRadius: 20)
-                .stroke(PMColor.border.opacity(0.7), lineWidth: 1)
+                .stroke(PMColor.border, lineWidth: 1)
         )
     }
 }

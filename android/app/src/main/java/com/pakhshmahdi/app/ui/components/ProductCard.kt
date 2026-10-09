@@ -40,7 +40,7 @@ fun ProductCard(
         shape = PMTheme.shapes.card,
         color = c.surface,
         border = BorderStroke(1.dp, c.border),
-        shadowElevation = 2.dp
+        shadowElevation = 4.dp
     ) {
         Column(Modifier.padding(8.dp)) {
             Box {
@@ -136,7 +136,7 @@ fun ProductCard(
                     toman(product.price),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Black,
-                    color = c.primary,
+                    color = c.accentGold,
                     modifier = Modifier.weight(1f),
                     maxLines = 1
                 )

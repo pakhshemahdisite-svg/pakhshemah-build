@@ -111,6 +111,10 @@ final class CartStore: ObservableObject {
         }
     }
 
+    var wholesaleMessage: String? { nil }
+
+    var isWholesaleEligible: Bool { !lines.isEmpty }
+
     func add(_ product: Product, variation: ProductVariation? = nil, quantity: Int = 1) {
         guard quantity > 0, product.purchasable, product.isInStock else { return }
         if (product.type == "variable" || !product.variations.isEmpty) && variation == nil { return }
@@ -118,7 +122,6 @@ final class CartStore: ObservableObject {
 
         let id = "\(product.id):\(variation?.id ?? 0)"
         let maxStock = variation?.stockQuantity ?? (variation == nil ? product.stockQuantity : nil)
-
         if let index = lines.firstIndex(where: { $0.id == id }) {
             let requested = lines[index].quantity + quantity
             lines[index].quantity = maxStock.map { min(requested, max(0, $0)) } ?? requested
@@ -138,8 +141,8 @@ final class CartStore: ObservableObject {
 
     func decrement(_ id: String) {
         guard let index = lines.firstIndex(where: { $0.id == id }) else { return }
-        if lines[index].quantity <= 1 { lines.remove(at: index) }
-        else { lines[index].quantity -= 1 }
+        guard lines[index].quantity > 1 else { return }
+        lines[index].quantity -= 1
     }
 
     func remove(_ id: String) {

@@ -13,61 +13,20 @@ struct CartView: View {
                     description: Text("محصولات موردنظر را به سبد اضافه کنید.")
                 )
             } else {
-                List {
-                    ForEach(cart.lines) { line in
-                        HStack(spacing: 12) {
-                            ProductImageView(url: line.variation?.image ?? line.product.image)
-                                .frame(width: 64, height: 64)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                ScrollView {
+                    VStack(spacing: 12) {
+                        liveRulesCard
 
-                            VStack(alignment: .trailing, spacing: 5) {
-                                Text(line.product.name)
-                                    .font(.subheadline.bold())
-                                    .lineLimit(2)
-                                if let variation = line.variation {
-                                    let label = variation.attributes.values.filter { !$0.isEmpty }.joined(separator: " • ")
-                                    if !label.isEmpty {
-                                        Text(label)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                                Text(toman(String((Int(Double(line.unitPrice) ?? 0)) * line.quantity)))
-                                    .foregroundStyle(PMColor.primary)
-                                    .fontWeight(.bold)
-                            }
-
-                            Spacer()
-
-                            VStack(spacing: 8) {
-                                Button { cart.increment(line.id) } label: {
-                                    Image(systemName: "plus.circle.fill")
-                                }
-                                .disabled(line.maxStock.map { line.quantity >= $0 } ?? false)
-
-                                Text("\(line.quantity)").fontWeight(.bold)
-
-                                Button { cart.decrement(line.id) } label: {
-                                    Image(systemName: "minus.circle")
-                                }
-                            }
-                            .foregroundStyle(PMColor.primary)
+                        ForEach(cart.lines) { line in
+                            cartLine(line)
                         }
-                    }
-                    .onDelete { offsets in
-                        offsets.map { cart.lines[$0].id }.forEach(cart.remove)
-                    }
 
-                    Section("خلاصه سفارش") {
-                        HStack {
-                            Text(toman(String(cart.subtotal)))
-                                .foregroundStyle(PMColor.primary)
-                                .fontWeight(.bold)
-                            Spacer()
-                            Text("جمع کالاها")
-                        }
+                        summaryCard
+
                     }
+                    .padding(16)
                 }
+                .background(PMColor.background)
 
                 NavigationLink {
                     if session.isLoggedIn {
@@ -76,17 +35,142 @@ struct CartView: View {
                         LoginView()
                     }
                 } label: {
-                    Text(session.isLoggedIn ? "ادامه و تکمیل سفارش" : "برای ادامه وارد حساب شوید")
-                        .fontWeight(.bold)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(PMColor.primary)
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                    HStack {
+                        Image(systemName: "arrow.left")
+                        Text(session.isLoggedIn ? "ادامه و تکمیل سفارش" : "برای ادامه وارد حساب شوید")
+                            .fontWeight(.bold)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(PMColor.primary)
+                    .foregroundStyle(PMColor.buttonForeground)
+                    .clipShape(RoundedRectangle(cornerRadius: 17))
                 }
-                .padding()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(PMColor.surface)
+                .overlay(alignment: .top) {
+                    Rectangle().fill(PMColor.border).frame(height: 1)
+                }
             }
         }
+        .background(PMColor.background)
         .navigationTitle("سبد خرید")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var liveRulesCard: some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(PMColor.gold)
+                .frame(width: 9, height: 9)
+            Text("شرایط خرید و حداقل‌های سفارش از سایت پخش مهدی به‌صورت لحظه‌ای بررسی می‌شود.")
+                .font(.caption)
+                .foregroundStyle(PMColor.secondary)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+        .padding(13)
+        .background(PMColor.surfaceElevated)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(PMColor.border, lineWidth: 1)
+        )
+    }
+
+    private func cartLine(_ line: CartStore.Line) -> some View {
+        HStack(spacing: 12) {
+            ProductImageView(url: line.variation?.image ?? line.product.image)
+                .frame(width: 82, height: 82)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+
+            VStack(alignment: .trailing, spacing: 7) {
+                Text(line.product.name)
+                    .font(.subheadline.bold())
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+
+                if let variation = line.variation {
+                    let label = variation.attributes.values.filter { !$0.isEmpty }.joined(separator: " • ")
+                    if !label.isEmpty {
+                        Text(label)
+                            .font(.caption)
+                            .foregroundStyle(PMColor.secondary)
+                    }
+                }
+
+                Text(toman(String((Int(Double(line.unitPrice) ?? 0)) * line.quantity)))
+                    .foregroundStyle(PMColor.primary)
+                    .fontWeight(.bold)
+            }
+
+            VStack(spacing: 7) {
+                Button { cart.increment(line.id) } label: {
+                    Image(systemName: "plus")
+                        .frame(width: 30, height: 30)
+                        .background(PMColor.surfaceElevated)
+                        .clipShape(Circle())
+                }
+                .disabled(line.maxStock.map { line.quantity >= $0 } ?? false)
+
+                Text("\(line.quantity)")
+                    .font(.subheadline.bold())
+                    .frame(minWidth: 30)
+
+                Button { cart.decrement(line.id) } label: {
+                    Image(systemName: "minus")
+                        .frame(width: 30, height: 30)
+                        .background(PMColor.surfaceElevated)
+                        .clipShape(Circle())
+                }
+                .disabled(line.quantity <= 1)
+            }
+            .foregroundStyle(PMColor.primary)
+
+            Button(role: .destructive) {
+                cart.remove(line.id)
+            } label: {
+                Image(systemName: "trash")
+                    .font(.subheadline)
+            }
+        }
+        .padding(12)
+        .background(PMColor.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(PMColor.border, lineWidth: 1)
+        )
+    }
+
+    private var summaryCard: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text(toman(String(cart.subtotal)))
+                    .foregroundStyle(PMColor.primary)
+                    .fontWeight(.bold)
+                Spacer()
+                Text("جمع کالاها")
+                    .foregroundStyle(PMColor.secondary)
+            }
+
+            Divider()
+
+            HStack {
+                Text("آماده بررسی نهایی")
+                    .foregroundStyle(PMColor.success)
+                    .fontWeight(.semibold)
+                Spacer()
+                Text("وضعیت سفارش")
+                    .fontWeight(.semibold)
+            }
+        }
+        .padding(16)
+        .background(PMColor.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(PMColor.border, lineWidth: 1)
+        )
     }
 }

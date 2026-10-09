@@ -11,7 +11,9 @@ struct ProductDetailView: View {
 
     init(product: Product) {
         self.product = product
-        let first = product.variations.first(where: { $0.isInStock }) ?? product.variations.first
+        let first = product.variations.first(where: {
+            $0.isInStock && ($0.stockQuantity == nil || $0.stockQuantity! > 0)
+        }) ?? product.variations.first
         _selectedVariationID = State(initialValue: first?.id)
         _selectedImage = State(initialValue: product.image)
     }
@@ -25,8 +27,9 @@ struct ProductDetailView: View {
     }
 
     private var inStock: Bool {
-        if let variation = selectedVariation { return variation.isInStock }
-        return product.isInStock
+        let hasStock = maxQuantity == nil || maxQuantity! > 0
+        if let variation = selectedVariation { return variation.isInStock && hasStock }
+        return product.isInStock && hasStock
     }
 
     private var price: String {
@@ -122,6 +125,8 @@ struct ProductDetailView: View {
                             .font(.title3.bold())
 
                         ForEach(product.variations) { variation in
+                            let variationAvailable = variation.isInStock &&
+                                (variation.stockQuantity == nil || variation.stockQuantity! > 0)
                             Button {
                                 selectedVariationID = variation.id
                                 quantity = 1
@@ -142,7 +147,7 @@ struct ProductDetailView: View {
                                                 : "ناموجود"
                                         )
                                         .font(.caption)
-                                        .foregroundStyle(variation.isInStock ? PMColor.success : .red)
+                                        .foregroundStyle(variationAvailable ? PMColor.success : .red)
                                     }
                                     Spacer()
                                     Text(toman(variation.price))
@@ -158,7 +163,7 @@ struct ProductDetailView: View {
                                 )
                             }
                             .buttonStyle(.plain)
-                            .disabled(!variation.isInStock)
+                            .disabled(!variationAvailable)
                         }
                     }
 
@@ -221,6 +226,23 @@ struct ProductDetailView: View {
                     .padding()
                     .background(PMColor.surface)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(PMColor.gold)
+                            .frame(width: 8, height: 8)
+                        Text("خرید عمده: حداقل ۶ عدد از هر کالا • حداقل مبلغ کل سفارش ۱۵ میلیون تومان")
+                            .font(.caption)
+                            .foregroundStyle(PMColor.secondary)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                    }
+                    .padding(12)
+                    .background(PMColor.surfaceElevated)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(PMColor.gold.opacity(0.28), lineWidth: 1)
+                    )
                 }
                 .padding()
             }
@@ -233,7 +255,7 @@ struct ProductDetailView: View {
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(inStock && product.purchasable ? PMColor.primary : Color.gray)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(PMColor.buttonForeground)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
             }
             .disabled(!inStock || !product.purchasable || (!product.variations.isEmpty && selectedVariation == nil))

@@ -85,7 +85,7 @@ fun SettingsScreen(onBack: () -> Unit) {
             PMSelectableCard(
                 selected = PMThemeController.mode == PMThemeMode.LIGHT,
                 title = "حالت روشن",
-                subtitle = "پس‌زمینه روشن، سرمه‌ای و طلایی",
+                subtitle = "سفید، مشکی و Accent طلایی",
                 onClick = { PMThemeController.updateMode(PMThemeMode.LIGHT) },
                 leading = { Icon(Icons.Outlined.LightMode, null, tint = c.primary) }
             )
@@ -95,7 +95,7 @@ fun SettingsScreen(onBack: () -> Unit) {
             PMSelectableCard(
                 selected = PMThemeController.mode == PMThemeMode.DARK,
                 title = "حالت تیره",
-                subtitle = "سرمه‌ای عمیق با Accent طلایی",
+                subtitle = "مشکی عمیق با جزئیات طلایی",
                 onClick = { PMThemeController.updateMode(PMThemeMode.DARK) },
                 leading = { Icon(Icons.Outlined.DarkMode, null, tint = c.primary) }
             )

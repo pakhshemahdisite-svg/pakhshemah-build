@@ -95,9 +95,10 @@ object CartStore {
         val index = lines.indexOfFirst { it.key == key }
         if (index < 0) return
         val line = lines[index]
-        if (line.quantity <= 1) lines.removeAt(index)
-        else lines[index] = line.copy(quantity = line.quantity - 1)
-        persist()
+        if (line.quantity > 1) {
+            lines[index] = line.copy(quantity = line.quantity - 1)
+            persist()
+        }
     }
 
     fun remove(key: String) {
