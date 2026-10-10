@@ -95,6 +95,16 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Upload release candidate artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: PakhshMahdi-Android-${{ steps.version.outputs.version }}-Release-Candidate
+          path: |
+            android/app/build/outputs/apk/pakhshMahdi/release/*.apk
+            android/app/build/outputs/bundle/pakhshMahdiRelease/*.aab
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Emulator install and launch smoke test
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -112,12 +122,3 @@ jobs:
             sleep 8
             adb shell pidof com.pakhshmahdi.app
 
-      - name: Upload release candidate artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: PakhshMahdi-Android-${{ steps.version.outputs.version }}-Release-Candidate
-          path: |
-            android/app/build/outputs/apk/pakhshMahdi/release/*.apk
-            android/app/build/outputs/bundle/pakhshMahdiRelease/*.aab
-          if-no-files-found: error
-          retention-days: 30
