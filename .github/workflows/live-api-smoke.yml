@@ -210,7 +210,6 @@ jobs:
               "billing_address": {
                   "first_name": "CI",
                   "last_name": "Smoke",
-                  "company": "",
                   "address_1": "CI smoke test",
                   "address_2": "",
                   "city": city_id,
@@ -230,7 +229,6 @@ jobs:
                   "state": "558",
                   "postcode": "1111111111",
                   "country": "IR",
-                  "phone": "09000000000",
               },
           }).encode("utf-8")
           customer_req = urllib.request.Request(
