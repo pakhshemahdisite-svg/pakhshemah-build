@@ -289,8 +289,8 @@ private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
                         .background(
                             Brush.horizontalGradient(
                                 listOf(
-                                    Color.Black.copy(alpha = .52f),
-                                    Color.Black.copy(alpha = .18f),
+                                    Color.Black.copy(alpha = .36f),
+                                    Color.Black.copy(alpha = .08f),
                                     Color.Transparent
                                 )
                             )
@@ -314,7 +314,7 @@ private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Text(
                         "انتخاب حرفه‌ای‌ها\nبا پخش مهدی",
-                        color = Color.White.copy(alpha = .92f),
+                        color = Color.White.copy(alpha = .98f),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold
                     )
