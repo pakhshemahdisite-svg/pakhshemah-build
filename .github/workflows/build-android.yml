@@ -85,6 +85,16 @@ jobs:
           cp "$APK" release/PakhshMahdi-latest-dev.apk
           sha256sum release/PakhshMahdi-latest-dev.apk > release/PakhshMahdi-latest-dev.apk.sha256
           "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --verbose --print-certs release/PakhshMahdi-latest-dev.apk
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PakhshMahdi-Android-${{ steps.version.outputs.version }}-Installable
+          path: |
+            release/PakhshMahdi-latest-dev.apk
+            release/PakhshMahdi-latest-dev.apk.sha256
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Emulator install and launch smoke test
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -101,16 +111,6 @@ jobs:
             adb shell monkey -p com.pakhshmahdi.app -c android.intent.category.LAUNCHER 1
             sleep 8
             adb shell pidof com.pakhshmahdi.app
-
-      - name: Upload installable APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: PakhshMahdi-Android-${{ steps.version.outputs.version }}-Installable
-          path: |
-            release/PakhshMahdi-latest-dev.apk
-            release/PakhshMahdi-latest-dev.apk.sha256
-          if-no-files-found: error
-          retention-days: 30
 
       - name: Upload release candidate artifacts
         uses: actions/upload-artifact@v4
