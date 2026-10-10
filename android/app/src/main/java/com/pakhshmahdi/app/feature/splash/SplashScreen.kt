@@ -13,6 +13,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.pakhshmahdi.app.ui.components.BrandLogo
@@ -34,9 +35,9 @@ fun SplashScreen(onDone: () -> Unit) {
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        c.background,
-                        c.primaryDark.copy(alpha = if (c.background == c.primaryDark) 1f else .06f),
-                        c.background
+                        Color(0xFF050505),
+                        Color(0xFF12100A),
+                        Color.Black
                     )
                 )
             )
@@ -67,8 +68,8 @@ fun SplashScreen(onDone: () -> Unit) {
         ) {
             Surface(
                 shape = RoundedCornerShape(34.dp),
-                color = c.surface,
-                border = BorderStroke(1.dp, c.border),
+                color = Color(0xFF080808),
+                border = BorderStroke(1.dp, c.accentGold.copy(alpha = .55f)),
                 shadowElevation = 10.dp
             ) {
                 BrandLogo(
@@ -84,20 +85,20 @@ fun SplashScreen(onDone: () -> Unit) {
             Text(
                 "پخش مهدی",
                 style = MaterialTheme.typography.displaySmall,
-                color = c.primary,
+                color = c.accentGold,
                 fontWeight = FontWeight.Black
             )
             Spacer(Modifier.height(9.dp))
             Text(
                 "عمده‌فروش لوازم خانه و آشپزخانه",
                 style = MaterialTheme.typography.titleMedium,
-                color = c.textPrimary
+                color = Color.White
             )
             Spacer(Modifier.height(5.dp))
             Text(
                 "در صالح‌آباد",
                 style = MaterialTheme.typography.bodyLarge,
-                color = c.textSecondary
+                color = Color.White.copy(alpha = .72f)
             )
         }
 
