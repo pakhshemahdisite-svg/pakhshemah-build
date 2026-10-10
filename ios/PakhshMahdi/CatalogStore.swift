@@ -2,6 +2,31 @@ import Foundation
 import SwiftUI
 import Security
 
+private func moneyToIntExact(_ value: String) -> Int? {
+    let normalized = value
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .replacingOccurrences(of: ",", with: "")
+    guard !normalized.isEmpty,
+          var decimal = Decimal(string: normalized, locale: Locale(identifier: "en_US_POSIX"))
+    else { return nil }
+
+    var rounded = Decimal()
+    NSDecimalRound(&rounded, &decimal, 0, .plain)
+    let number = NSDecimalNumber(decimal: rounded)
+    guard number != .notANumber else { return nil }
+
+    let int64 = number.int64Value
+    guard NSDecimalNumber(value: int64).compare(number) == .orderedSame else { return nil }
+    return Int(exactly: int64)
+}
+
+private func moneyLineTotalExact(_ unitPrice: String, quantity: Int) -> Int {
+    guard quantity > 0, let unit = moneyToIntExact(unitPrice) else { return 0 }
+    let result = unit.multipliedReportingOverflow(by: quantity)
+    return result.overflow ? 0 : result.partialValue
+}
+
+
 @MainActor
 final class CatalogStore: ObservableObject {
     @Published var home = HomePayload()
@@ -107,7 +132,9 @@ final class CartStore: ObservableObject {
 
     var subtotal: Int {
         lines.reduce(0) { partial, line in
-            partial + Int(Double(line.unitPrice) ?? 0) * line.quantity
+            let lineTotal = moneyLineTotalExact(line.unitPrice, quantity: line.quantity)
+            let result = partial.addingReportingOverflow(lineTotal)
+            return result.overflow ? 0 : result.partialValue
         }
     }
 
