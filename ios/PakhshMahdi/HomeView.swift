@@ -98,6 +98,13 @@ struct HomeView: View {
 
                     Spacer()
 
+                    NavigationLink {
+                        CartView()
+                    } label: {
+                        headerIcon("cart")
+                    }
+                    .buttonStyle(.plain)
+
                     HStack(spacing: 4) {
                         Image(systemName: "location")
                             .font(.subheadline.bold())
@@ -170,8 +177,8 @@ struct HomeView: View {
 
                             LinearGradient(
                                 colors: [
-                                    Color.white.opacity(0.97),
-                                    Color.white.opacity(0.74),
+                                    Color.white.opacity(0.72),
+                                    Color.white.opacity(0.30),
                                     Color.clear
                                 ],
                                 startPoint: .leading,
