@@ -104,20 +104,32 @@ class CheckoutRepository {
     }
 
     suspend fun updateAddress(address: StoreAddress): StoreCart {
-        val token = ensureToken()
+        var token = ensureToken()
+        val payload = UpdateCustomerRequest(
+            billingAddress = address,
+            shippingAddress = address.toShippingAddress()
+        )
+
+        var response = api.updateCustomer(token, payload)
+
+        // Checkout step 1 can fail when WooCommerce expires the Store API cart
+        // session between opening checkout and submitting the address. Rebuild
+        // the server cart once from the local basket and retry without changing
+        // the stable 0.10.3 API endpoints.
+        if ((!response.isSuccessful || response.body()?.itemsCount == 0) && preparedLines.isNotEmpty()) {
+            LocalStore.saveStoreCartToken(null)
+            prepareCart(preparedLines)
+            token = ensureToken()
+            response = api.updateCustomer(token, payload)
+        }
+
         var cart = requireBody(
-            api.updateCustomer(
-                token,
-                UpdateCustomerRequest(
-                    billingAddress = address,
-                    shippingAddress = address.toShippingAddress()
-                )
-            ),
+            response,
             "محاسبه آدرس و روش ارسال انجام نشد."
         )
 
         if (cart.itemsCount <= 0) {
-            throw StoreApiException("سبد خرید سرور خالی است. به سبد خرید برگردید و دوباره ادامه دهید.")
+            throw StoreApiException("سبد خرید سرور همگام نشد. دوباره تلاش کنید.")
         }
 
         // Some legacy Persian shipping methods calculate after the customer update
