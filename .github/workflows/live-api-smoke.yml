@@ -222,7 +222,6 @@ jobs:
               "shipping_address": {
                   "first_name": "CI",
                   "last_name": "Smoke",
-                  "company": "",
                   "address_1": "CI smoke test",
                   "address_2": "",
                   "city": city_id,
