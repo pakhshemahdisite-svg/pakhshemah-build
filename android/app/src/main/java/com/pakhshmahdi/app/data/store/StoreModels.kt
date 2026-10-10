@@ -84,9 +84,57 @@ fun StoreAddress.toShippingAddress() = StoreShippingAddress(
     phone = phone
 )
 
+data class StoreBillingPayload(
+    @SerializedName("first_name") val firstName: String,
+    @SerializedName("last_name") val lastName: String,
+    @SerializedName("address_1") val address1: String,
+    @SerializedName("address_2") val address2: String = "",
+    val city: String,
+    val state: String,
+    val postcode: String,
+    val country: String = "IR",
+    val email: String = "",
+    val phone: String
+)
+
+data class StoreShippingPayload(
+    @SerializedName("first_name") val firstName: String,
+    @SerializedName("last_name") val lastName: String,
+    @SerializedName("address_1") val address1: String,
+    @SerializedName("address_2") val address2: String = "",
+    val city: String,
+    val state: String,
+    val postcode: String,
+    val country: String = "IR"
+)
+
+fun StoreAddress.toBillingPayload() = StoreBillingPayload(
+    firstName = firstName,
+    lastName = lastName,
+    address1 = address1,
+    address2 = address2,
+    city = city,
+    state = state,
+    postcode = postcode,
+    country = country,
+    email = email,
+    phone = phone
+)
+
+fun StoreAddress.toShippingPayload() = StoreShippingPayload(
+    firstName = firstName,
+    lastName = lastName,
+    address1 = address1,
+    address2 = address2,
+    city = city,
+    state = state,
+    postcode = postcode,
+    country = country
+)
+
 data class UpdateCustomerRequest(
-    @SerializedName("billing_address") val billingAddress: StoreAddress,
-    @SerializedName("shipping_address") val shippingAddress: StoreShippingAddress
+    @SerializedName("billing_address") val billingAddress: StoreBillingPayload,
+    @SerializedName("shipping_address") val shippingAddress: StoreShippingPayload
 )
 
 data class AddItemRequest(
@@ -124,8 +172,8 @@ data class ShippingQuoteResponse(
 )
 
 data class CheckoutRequest(
-    @SerializedName("billing_address") val billingAddress: StoreAddress,
-    @SerializedName("shipping_address") val shippingAddress: StoreShippingAddress,
+    @SerializedName("billing_address") val billingAddress: StoreBillingPayload,
+    @SerializedName("shipping_address") val shippingAddress: StoreShippingPayload,
     @SerializedName("payment_method") val paymentMethod: String,
     @SerializedName("payment_data") val paymentData: List<PaymentDataItem> = emptyList(),
     @SerializedName("expected_total") val expectedTotal: String,

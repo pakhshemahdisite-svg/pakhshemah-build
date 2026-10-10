@@ -289,8 +289,8 @@ private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
                         .background(
                             Brush.horizontalGradient(
                                 listOf(
-                                    Color.White.copy(alpha = .72f),
-                                    Color.White.copy(alpha = .30f),
+                                    Color.Black.copy(alpha = .52f),
+                                    Color.Black.copy(alpha = .18f),
                                     Color.Transparent
                                 )
                             )
@@ -306,7 +306,7 @@ private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
                 ) {
                     Text(
                         "کیفیت در\nهر آشپزخانه",
-                        color = Color(0xFF101010),
+                        color = Color.White,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Black,
                         lineHeight = MaterialTheme.typography.headlineMedium.lineHeight
@@ -314,7 +314,7 @@ private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Text(
                         "انتخاب حرفه‌ای‌ها\nبا پخش مهدی",
-                        color = Color(0xFF3E3A33),
+                        color = Color.White.copy(alpha = .92f),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -322,7 +322,7 @@ private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
                     Surface(
                         shape = RoundedCornerShape(14.dp),
                         color = c.accentGold,
-                        border = BorderStroke(1.dp, PMGoldDeep.copy(alpha = .45f))
+                        border = BorderStroke(1.dp, PMGoldDeep.copy(alpha = .65f))
                     ) {
                         Text(
                             "مشاهده محصولات  ‹",

@@ -109,8 +109,8 @@ class CheckoutRepository {
             api.updateCustomer(
                 token,
                 UpdateCustomerRequest(
-                    billingAddress = address,
-                    shippingAddress = address.toShippingAddress()
+                    billingAddress = address.toBillingPayload(),
+                    shippingAddress = address.toShippingPayload()
                 )
             ),
             "محاسبه آدرس و روش ارسال انجام نشد."
@@ -196,8 +196,8 @@ class CheckoutRepository {
             api.checkout(
                 token,
                 CheckoutRequest(
-                    billingAddress = address,
-                    shippingAddress = address.toShippingAddress(),
+                    billingAddress = address.toBillingPayload(),
+                    shippingAddress = address.toShippingPayload(),
                     paymentMethod = paymentMethod,
                     expectedTotal = expectedTotal,
                     customerNote = customerNote
