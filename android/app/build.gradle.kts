@@ -48,14 +48,14 @@ fun Map<String, Any?>.boolean(key: String, default: Boolean = false): Boolean =
 
 android {
     namespace = "com.pakhshmahdi.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.iamir.commerce"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 37
-        versionName = "0.10.2"
+        targetSdk = 36
+        versionCode = 38
+        versionName = "0.10.3"
 
         vectorDrawables.useSupportLibrary = true
     }
