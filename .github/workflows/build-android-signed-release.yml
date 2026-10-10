@@ -39,7 +39,7 @@ jobs:
         with:
           gradle-version: "8.9"
 
-      - name: Configure Android SDK 35
+      - name: Configure Android SDK 36
         shell: bash
         run: |
           set -euo pipefail
@@ -50,7 +50,7 @@ jobs:
           echo "$ANDROID_SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
           yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
-          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Prepare production signing
         shell: bash
@@ -96,7 +96,7 @@ jobs:
           cp "$APK" release/PakhshMahdi-${{ steps.version.outputs.version }}-release.apk
           cp "$AAB" release/PakhshMahdi-${{ steps.version.outputs.version }}-release.aab
 
-          "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose --print-certs release/PakhshMahdi-${{ steps.version.outputs.version }}-release.apk
+          "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --verbose --print-certs release/PakhshMahdi-${{ steps.version.outputs.version }}-release.apk
           sha256sum release/PakhshMahdi-${{ steps.version.outputs.version }}-release.apk > release/PakhshMahdi-${{ steps.version.outputs.version }}-release.apk.sha256
           sha256sum release/PakhshMahdi-${{ steps.version.outputs.version }}-release.aab > release/PakhshMahdi-${{ steps.version.outputs.version }}-release.aab.sha256
 
