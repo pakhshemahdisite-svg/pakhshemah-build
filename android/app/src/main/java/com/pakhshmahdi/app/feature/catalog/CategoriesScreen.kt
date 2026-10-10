@@ -11,7 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Category
-import androidx.compose.material.icons.outlined.ChevronLeft
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -112,7 +112,7 @@ fun CategoriesScreen(
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Icon(
-                                                imageVector = Icons.Outlined.ChevronLeft,
+                                                imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                                                 contentDescription = "مشاهده دسته‌بندی",
                                                 tint = PMGoldDeep,
                                                 modifier = Modifier.size(22.dp)
