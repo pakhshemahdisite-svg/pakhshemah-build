@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Category
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -110,11 +111,11 @@ fun CategoriesScreen(
                                         border = BorderStroke(1.dp, PMGoldDeep.copy(alpha = .18f))
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Text(
-                                                "‹",
-                                                color = PMGoldDeep,
-                                                style = MaterialTheme.typography.titleLarge,
-                                                fontWeight = FontWeight.Black
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                                                contentDescription = "مشاهده دسته‌بندی",
+                                                tint = PMGoldDeep,
+                                                modifier = Modifier.size(20.dp)
                                             )
                                         }
                                     }
