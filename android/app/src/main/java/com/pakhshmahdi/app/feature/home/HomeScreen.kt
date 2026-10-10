@@ -195,6 +195,27 @@ private fun PremiumHomeHeader(
                 modifier = Modifier.align(Alignment.CenterEnd),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                HeaderCircleButton(onClick = onCart) {
+                    BadgedBox(
+                        badge = {
+                            if (cartCount > 0) {
+                                Badge(containerColor = c.accentGold) {
+                                    Text(
+                                        cartCount.coerceAtMost(99).toString(),
+                                        color = c.primaryDark
+                                    )
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            Icons.Outlined.ShoppingBag,
+                            contentDescription = "سبد خرید",
+                            tint = c.textPrimary
+                        )
+                    }
+                }
+                Spacer(Modifier.width(6.dp))
                 Icon(Icons.Outlined.LocationOn, null, tint = c.textPrimary, modifier = Modifier.size(21.dp))
                 Spacer(Modifier.width(3.dp))
                 Text("تهران", color = c.textPrimary, fontWeight = FontWeight.SemiBold)
@@ -221,22 +242,7 @@ private fun PremiumHomeHeader(
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.End
                 )
-                if (cartCount > 0) {
-                    Surface(
-                        modifier = Modifier.size(26.dp).clickable(onClick = onCart),
-                        shape = CircleShape,
-                        color = c.accentGold
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                cartCount.coerceAtMost(99).toString(),
-                                color = c.primaryDark,
-                                fontWeight = FontWeight.Black,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
-                    }
-                }
+
             }
         }
     }
@@ -294,8 +300,8 @@ private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
                         .background(
                             Brush.horizontalGradient(
                                 listOf(
-                                    Color.White.copy(alpha = .96f),
-                                    Color.White.copy(alpha = .74f),
+                                    Color.Black.copy(alpha = .34f),
+                                    Color.Black.copy(alpha = .08f),
                                     Color.Transparent
                                 )
                             )
@@ -311,7 +317,7 @@ private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
                 ) {
                     Text(
                         "کیفیت در\nهر آشپزخانه",
-                        color = Color(0xFF101010),
+                        color = Color.White,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Black,
                         lineHeight = MaterialTheme.typography.headlineMedium.lineHeight
@@ -319,7 +325,7 @@ private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Text(
                         "انتخاب حرفه‌ای‌ها\nبا پخش مهدی",
-                        color = Color(0xFF3E3A33),
+                        color = Color.White.copy(alpha = .96f),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold
                     )
