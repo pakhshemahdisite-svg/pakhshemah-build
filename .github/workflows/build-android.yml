@@ -3,7 +3,7 @@ name: Build Pakhsh Mahdi Android
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "release/0.10.6-from-0.10.3" ]
     paths:
       - "android/**"
       - "clients/pakhsh-mahdi/**"
@@ -46,7 +46,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-      - name: Configure Android SDK 35
+      - name: Configure Android SDK 36
         shell: bash
         run: |
           set -euo pipefail
@@ -57,8 +57,8 @@ jobs:
           echo "$ANDROID_SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
           echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
           yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
-          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --list_installed | grep -E "platforms;android-35|build-tools;35.0.0|platform-tools"
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --list_installed | grep -E "platforms;android-36|build-tools;36.0.0|platform-tools"
       - name: Build debug APK
         shell: bash
         run: |
@@ -85,10 +85,20 @@ jobs:
           cp "$APK" release/PakhshMahdi-latest-dev.apk
           sha256sum release/PakhshMahdi-latest-dev.apk > release/PakhshMahdi-latest-dev.apk.sha256
           "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose --print-certs release/PakhshMahdi-latest-dev.apk
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PakhshMahdi-Android-${{ steps.version.outputs.version }}-Installable
+          path: |
+            release/PakhshMahdi-latest-dev.apk
+            release/PakhshMahdi-latest-dev.apk.sha256
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Emulator install and launch smoke test
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 36
           target: default
           arch: x86_64
           profile: pixel_6
@@ -101,16 +111,6 @@ jobs:
             adb shell monkey -p com.pakhshmahdi.app -c android.intent.category.LAUNCHER 1
             sleep 8
             adb shell pidof com.pakhshmahdi.app
-
-      - name: Upload installable APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: PakhshMahdi-Android-${{ steps.version.outputs.version }}-Installable
-          path: |
-            release/PakhshMahdi-latest-dev.apk
-            release/PakhshMahdi-latest-dev.apk.sha256
-          if-no-files-found: error
-          retention-days: 30
 
       - name: Upload release candidate artifacts
         uses: actions/upload-artifact@v4
