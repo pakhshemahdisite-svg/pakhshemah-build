@@ -3,7 +3,7 @@
   "appName": "پخش مهدی",
   "appSubtitle": "عمده‌فروشی لوازم خانه و آشپزخانه",
   "domain": "https://pakhshemahdi.com",
-  "apiBaseUrl": "https://pakhshemahdi.com/wp-json/pm-app/v1/",
+  "apiBaseUrl": "https://pakhshemahdi.com/wp-json/iamir-app/v1/",
   "storeApiUrl": "https://pakhshemahdi.com/wp-json/wc/store/v1/",
   "pwsAjaxUrl": "https://pakhshemahdi.com/wp-admin/admin-ajax.php",
   "supportUrl": "https://pakhshemahdi.com/support-tickets/",
