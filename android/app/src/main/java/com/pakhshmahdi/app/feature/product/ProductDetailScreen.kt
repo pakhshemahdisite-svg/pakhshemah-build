@@ -289,8 +289,15 @@ fun ProductDetailScreen(
 
                 if (product.variations.isNotEmpty()) {
                     Spacer(Modifier.height(20.dp))
+                    val variationAttributes = product.attributes.filter { it.variation }
+                    val variationTitle = when {
+                        variationAttributes.size == 1 &&
+                            variationAttributes.first().name.isNotBlank() ->
+                            "انتخاب ${variationAttributes.first().name}"
+                        else -> "انتخاب مشخصات"
+                    }
                     Text(
-                        "انتخاب مدل",
+                        variationTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Black,
                         color = c.textPrimary
@@ -495,10 +502,19 @@ private fun VariationOption(
     onClick: () -> Unit
 ) {
     val c = PMTheme.colors
-    val label = variation.attributes.values
-        .filter { it.isNotBlank() }
+    val label = variation.selection
+        .mapNotNull { item ->
+            val itemLabel = item.label.ifBlank { item.attribute }
+            val itemValue = item.displayValue.ifBlank { item.value }
+            if (itemLabel.isBlank() || itemValue.isBlank()) null else "$itemLabel: $itemValue"
+        }
+        .ifEmpty {
+            variation.attributes.entries.mapNotNull { (name, value) ->
+                if (name.isBlank() || value.isBlank()) null else "$name: $value"
+            }
+        }
         .joinToString(" • ")
-        .ifBlank { "گزینه ${index + 1}" }
+        .ifBlank { "متغیر #${variation.id}" }
 
     Surface(
         modifier = Modifier
