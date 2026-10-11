@@ -15,6 +15,13 @@ data class ProductAttribute(
     val variation: Boolean = false
 )
 
+data class ProductVariationSelection(
+    val attribute: String = "",
+    val value: String = "",
+    val label: String = "",
+    val displayValue: String = ""
+)
+
 data class ProductVariation(
     val id: Long,
     val price: String = "",
@@ -23,6 +30,7 @@ data class ProductVariation(
     val stockStatus: String = "instock",
     val stockQuantity: Int? = null,
     val attributes: Map<String, String> = emptyMap(),
+    val selection: List<ProductVariationSelection> = emptyList(),
     val image: String? = null
 )
 
