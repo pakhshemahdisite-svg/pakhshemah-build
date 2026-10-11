@@ -26,3 +26,31 @@ fun normalizeIranianDigits(value: String): String = buildString(value.length) {
 
 fun normalizeNumericAddressField(value: String): String =
     normalizeIranianDigits(value).filter { it in '0'..'9' }
+
+
+fun StoreAddress.normalizedForWooCommerce(): StoreAddress {
+    val normalizedPhone = normalizeNumericAddressField(phone)
+    val normalizedPostcode = normalizeNumericAddressField(postcode)
+    val normalizedCity = normalizeIranianDigits(city.trim())
+    val normalizedState = normalizeIranianDigits(state.trim())
+
+    return copy(
+        firstName = firstName.trim(),
+        lastName = lastName.trim(),
+        company = company.trim(),
+        address1 = address1.trim(),
+        address2 = address2.trim(),
+        city = normalizedCity,
+        state = normalizedState,
+        postcode = normalizedPostcode,
+        country = country.trim().uppercase().ifBlank { "IR" },
+        phone = normalizedPhone,
+        email = email.trim().ifBlank {
+            if (normalizedPhone.isNotBlank()) {
+                "$normalizedPhone@mobile.pakhshemahdi.com"
+            } else {
+                ""
+            }
+        }
+    )
+}
