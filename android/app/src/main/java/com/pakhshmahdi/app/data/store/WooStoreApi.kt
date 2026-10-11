@@ -7,9 +7,19 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface WooStoreApi {
+    @GET("products/attributes")
+    suspend fun productAttributeTaxonomies(): Response<List<StoreProductAttributeTaxonomy>>
+
+    @GET("products/attributes/{id}/terms")
+    suspend fun productAttributeTerms(
+        @Path("id") id: Long,
+        @Query("per_page") perPage: Int = 100
+    ): Response<List<StoreProductAttributeTerm>>
+
     @GET("products")
     suspend fun productVariations(
         @Query("type") type: String = "variation",
