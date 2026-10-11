@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pakhshmahdi.app.data.model.Product
 import com.pakhshmahdi.app.data.repository.CatalogRepository
+import com.pakhshmahdi.app.data.store.StoreApiClient
+import com.pakhshmahdi.app.data.store.VariationResolver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -24,7 +26,23 @@ class ProductDetailViewModel : ViewModel() {
         viewModelScope.launch {
             _state.value = ProductDetailState(loading = true)
             runCatching { repository.product(id) }
-                .onSuccess { _state.value = ProductDetailState(loading = false, product = it) }
+                .onSuccess { product ->
+                    val enriched = if (product.variations.isNotEmpty()) {
+                        val storeVariations = runCatching {
+                            val response = StoreApiClient.api.productVariations(parent = product.id)
+                            if (response.isSuccessful) response.body().orEmpty() else emptyList()
+                        }.getOrDefault(emptyList())
+
+                        VariationResolver.enrich(product, storeVariations)
+                    } else {
+                        product
+                    }
+
+                    _state.value = ProductDetailState(
+                        loading = false,
+                        product = enriched
+                    )
+                }
                 .onFailure {
                     _state.value = ProductDetailState(
                         loading = false,
