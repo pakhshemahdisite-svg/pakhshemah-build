@@ -67,8 +67,7 @@ data class StoreShippingAddress(
     val city: String,
     val state: String,
     val postcode: String,
-    val country: String = "IR",
-    val phone: String
+    val country: String = "IR"
 )
 
 fun StoreAddress.toShippingAddress() = StoreShippingAddress(
@@ -80,8 +79,7 @@ fun StoreAddress.toShippingAddress() = StoreShippingAddress(
     city = city,
     state = state,
     postcode = postcode,
-    country = country,
-    phone = phone
+    country = country
 )
 
 data class UpdateCustomerRequest(
