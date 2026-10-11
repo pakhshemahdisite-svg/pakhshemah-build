@@ -105,10 +105,21 @@ class VariationResolverTest {
             )
         )
 
-        val enriched = VariationResolver.enrich(product, emptyList())
+        val enriched = VariationResolver.enrich(
+            product = product,
+            storeVariations = emptyList(),
+            termSlugs = mapOf(
+                "pa_color" to mapOf(
+                    "طلایی" to "gold",
+                    "مسی" to "copper"
+                )
+            )
+        )
 
         assertEquals("طلایی", enriched.variations[0].attributes["رنگ"])
         assertEquals("مسی", enriched.variations[1].attributes["رنگ"])
+        assertEquals("gold", enriched.variations[0].selection.single().value)
+        assertEquals("copper", enriched.variations[1].selection.single().value)
         assertTrue(enriched.variations.all { it.selection.isNotEmpty() })
     }
 }
