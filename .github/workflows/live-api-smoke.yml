@@ -3,7 +3,7 @@ name: Live API Smoke Test
 on:
   workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "release/0.10.7" ]
     paths:
       - ".github/workflows/live-api-smoke.yml"
 
@@ -53,6 +53,24 @@ jobs:
                       raise RuntimeError(f"{name}: invalid JSON") from exc
                   payloads[name] = payload
                   print(f"{name}: OK")
+
+          # Verify authentication routes exist without sending an OTP.
+          for route in ("auth/request-otp", "auth/verify-otp"):
+              req = urllib.request.Request(
+                  f"https://pakhshemahdi.com/wp-json/pm-app/v1/{route}",
+                  method="OPTIONS",
+                  headers={
+                      "User-Agent": "PakhshMahdi-CI/1.0",
+                      "Accept": "application/json",
+                  },
+              )
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  if response.status != 200:
+                      raise RuntimeError(f"{route}: OPTIONS HTTP {response.status}")
+                  route_info = json.loads(response.read().decode("utf-8"))
+              if not isinstance(route_info, dict) or "methods" not in route_info:
+                  raise RuntimeError(f"{route}: invalid REST route schema")
+              print(f"{route}: route OK")
 
           health = payloads["health"]
           if not isinstance(health, dict):
