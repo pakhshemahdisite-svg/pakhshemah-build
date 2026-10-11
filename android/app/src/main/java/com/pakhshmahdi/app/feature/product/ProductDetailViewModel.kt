@@ -28,12 +28,47 @@ class ProductDetailViewModel : ViewModel() {
             runCatching { repository.product(id) }
                 .onSuccess { product ->
                     val enriched = if (product.variations.isNotEmpty()) {
+                        val storeApi = StoreApiClient.api
                         val storeVariations = runCatching {
-                            val response = StoreApiClient.api.productVariations(parent = product.id)
+                            val response = storeApi.productVariations(parent = product.id)
                             if (response.isSuccessful) response.body().orEmpty() else emptyList()
                         }.getOrDefault(emptyList())
 
-                        VariationResolver.enrich(product, storeVariations)
+                        val neededTaxonomies = product.attributes
+                            .filter { it.variation && it.slug.startsWith("pa_") }
+                            .map { it.slug }
+                            .distinct()
+
+                        val termSlugs = if (neededTaxonomies.isNotEmpty()) {
+                            val taxonomies = runCatching {
+                                val response = storeApi.productAttributeTaxonomies()
+                                if (response.isSuccessful) response.body().orEmpty() else emptyList()
+                            }.getOrDefault(emptyList())
+
+                            neededTaxonomies.associateWith { taxonomySlug ->
+                                val taxonomy = taxonomies.firstOrNull { it.taxonomy == taxonomySlug }
+                                if (taxonomy == null) {
+                                    emptyMap()
+                                } else {
+                                    runCatching {
+                                        val response = storeApi.productAttributeTerms(taxonomy.id)
+                                        if (response.isSuccessful) {
+                                            response.body().orEmpty().associate { it.name to it.slug }
+                                        } else {
+                                            emptyMap()
+                                        }
+                                    }.getOrDefault(emptyMap())
+                                }
+                            }
+                        } else {
+                            emptyMap()
+                        }
+
+                        VariationResolver.enrich(
+                            product = product,
+                            storeVariations = storeVariations,
+                            termSlugs = termSlugs
+                        )
                     } else {
                         product
                     }
