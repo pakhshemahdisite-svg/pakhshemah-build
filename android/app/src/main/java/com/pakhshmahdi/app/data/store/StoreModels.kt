@@ -89,9 +89,21 @@ data class UpdateCustomerRequest(
     @SerializedName("shipping_address") val shippingAddress: StoreShippingAddress
 )
 
+data class StoreProductVariation(
+    val id: Long,
+    val variation: String = "",
+    val permalink: String = ""
+)
+
+data class StoreVariationAttribute(
+    val attribute: String,
+    val value: String
+)
+
 data class AddItemRequest(
     val id: Long,
-    val quantity: Int
+    val quantity: Int,
+    val variation: List<StoreVariationAttribute> = emptyList()
 )
 
 data class CouponRequest(
