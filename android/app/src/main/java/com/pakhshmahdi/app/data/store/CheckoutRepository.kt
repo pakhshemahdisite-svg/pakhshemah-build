@@ -126,10 +126,11 @@ class CheckoutRepository {
     }
 
     suspend fun updateAddress(address: StoreAddress): StoreCart {
+        val normalizedAddress = address.normalizedForWooCommerce()
         var token = ensureToken()
         val payload = UpdateCustomerRequest(
-            billingAddress = address,
-            shippingAddress = address.toShippingAddress()
+            billingAddress = normalizedAddress,
+            shippingAddress = normalizedAddress.toShippingAddress()
         )
 
         var response = api.updateCustomer(token, payload)
@@ -177,9 +178,9 @@ class CheckoutRepository {
                                 quantity = line.quantity
                             )
                         },
-                        state = address.state,
-                        city = address.city,
-                        postcode = address.postcode
+                        state = normalizedAddress.state,
+                        city = normalizedAddress.city,
+                        postcode = normalizedAddress.postcode
                     )
                 )
             }.getOrElse {
@@ -204,7 +205,7 @@ class CheckoutRepository {
             throw StoreApiException("برای این آدرس امکان محاسبه ارسال وجود ندارد. آدرس و کدپستی را بررسی کنید.")
         }
 
-        LocalStore.saveCheckoutAddress(address)
+        LocalStore.saveCheckoutAddress(normalizedAddress)
         return cart
     }
 
@@ -225,13 +226,14 @@ class CheckoutRepository {
         expectedTotal: String,
         customerNote: String
     ): CheckoutResponse {
+        val normalizedAddress = address.normalizedForWooCommerce()
         val token = ensureToken()
         val result = requireBody(
             api.checkout(
                 token,
                 CheckoutRequest(
-                    billingAddress = address,
-                    shippingAddress = address.toShippingAddress(),
+                    billingAddress = normalizedAddress,
+                    shippingAddress = normalizedAddress.toShippingAddress(),
                     paymentMethod = paymentMethod,
                     expectedTotal = expectedTotal,
                     customerNote = customerNote
@@ -241,7 +243,7 @@ class CheckoutRepository {
         )
 
         if (result.orderId > 0) {
-            LocalStore.saveCheckoutAddress(address)
+            LocalStore.saveCheckoutAddress(normalizedAddress)
             val authToken = AuthStore.token
             if (!authToken.isNullOrBlank() && result.orderKey.isNotBlank()) {
                 runCatching {
