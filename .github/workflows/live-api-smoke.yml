@@ -284,12 +284,18 @@ jobs:
                   raise RuntimeError(f"cart smoke: clear failed HTTP {response.status}")
           print("cart_clear: OK")
 
-          # Validate a real variable product using the exact Store API
-          # variation attributes. This reproduces the mobile add-to-cart flow.
+          # Validate a real variable product. Some imported Woo variations on
+          # this store are wildcard children (Store API returns attributes=[]).
+          # Reconstruct the chosen attribute from the parent product and global
+          # Woo attribute term slugs, then verify Woo accepts the exact payload.
           variable_parent = None
+          parent_detail = None
           for page in range(1, 6):
               url = f"https://pakhshemahdi.com/wp-json/pm-app/v1/products?page={page}&per_page=50"
-              req = urllib.request.Request(url, headers={"User-Agent": "PakhshMahdi-CI/1.0", "Accept": "application/json"})
+              req = urllib.request.Request(
+                  url,
+                  headers={"User-Agent": "PakhshMahdi-CI/1.0", "Accept": "application/json"},
+              )
               with urllib.request.urlopen(req, timeout=30) as response:
                   page_payload = json.loads(response.read().decode("utf-8"))
               variable_parent = next(
@@ -303,39 +309,75 @@ jobs:
               raise RuntimeError("variable cart smoke: no variable product found")
 
           parent_id = int(variable_parent["id"])
-          variations_url = (
-              "https://pakhshemahdi.com/wp-json/wc/store/v1/products"
-              f"?type=variation&parent={parent_id}&per_page=100"
-          )
-          req = urllib.request.Request(
-              variations_url,
+          detail_req = urllib.request.Request(
+              f"https://pakhshemahdi.com/wp-json/pm-app/v1/products/{parent_id}",
               headers={"User-Agent": "PakhshMahdi-CI/1.0", "Accept": "application/json"},
           )
-          with urllib.request.urlopen(req, timeout=30) as response:
-              store_variations = json.loads(response.read().decode("utf-8"))
+          with urllib.request.urlopen(detail_req, timeout=30) as response:
+              parent_detail = json.loads(response.read().decode("utf-8"))
 
-          candidate_variation = None
-          candidate_selection = None
-          for variation in store_variations:
-              permalink = str(variation.get("permalink", ""))
-              query = urllib.parse.urlparse(permalink).query
-              selection = []
-              for key, value in urllib.parse.parse_qsl(query, keep_blank_values=False):
-                  if not key.startswith("attribute_") or not value:
-                      continue
-                  attribute = key[len("attribute_"):] if key.startswith("attribute_pa_") else key
-                  selection.append({"attribute": attribute, "value": value})
-              if selection:
-                  candidate_variation = variation
-                  candidate_selection = selection
-                  break
-
-          if candidate_variation is None or not candidate_selection:
-              print(
-                  "variable cart debug: "
-                  + json.dumps(store_variations[:2], ensure_ascii=False, indent=2)
+          parent_attributes = [
+              item for item in parent_detail.get("attributes", [])
+              if item.get("variation") and item.get("options")
+          ]
+          parent_variations = parent_detail.get("variations", [])
+          if not parent_attributes or not parent_variations:
+              raise RuntimeError(
+                  "variable cart smoke: parent variation metadata missing "
+                  + json.dumps({
+                      "id": parent_id,
+                      "attributes": parent_detail.get("attributes", []),
+                      "variations": parent_variations,
+                  }, ensure_ascii=False)
               )
-              raise RuntimeError("variable cart smoke: variation attributes missing")
+
+          # This smoke product currently has one varying attribute (color).
+          attribute = parent_attributes[0]
+          display_value = str(attribute["options"][0])
+          attribute_slug = str(attribute.get("slug", ""))
+          attribute_name = str(attribute.get("name", attribute_slug))
+          request_attribute = attribute_name
+          request_value = display_value
+
+          if attribute_slug.startswith("pa_"):
+              attrs_req = urllib.request.Request(
+                  "https://pakhshemahdi.com/wp-json/wc/store/v1/products/attributes",
+                  headers={"User-Agent": "PakhshMahdi-CI/1.0", "Accept": "application/json"},
+              )
+              with urllib.request.urlopen(attrs_req, timeout=30) as response:
+                  global_attributes = json.loads(response.read().decode("utf-8"))
+
+              taxonomy = next(
+                  (item for item in global_attributes if item.get("taxonomy") == attribute_slug),
+                  None,
+              )
+              if taxonomy is None:
+                  raise RuntimeError(f"variable cart smoke: taxonomy {attribute_slug} not found")
+
+              terms_req = urllib.request.Request(
+                  f"https://pakhshemahdi.com/wp-json/wc/store/v1/products/attributes/{taxonomy['id']}/terms?per_page=100",
+                  headers={"User-Agent": "PakhshMahdi-CI/1.0", "Accept": "application/json"},
+              )
+              with urllib.request.urlopen(terms_req, timeout=30) as response:
+                  terms = json.loads(response.read().decode("utf-8"))
+
+              term = next(
+                  (item for item in terms if str(item.get("name", "")).strip() == display_value.strip()),
+                  None,
+              )
+              if term is None:
+                  raise RuntimeError(
+                      f"variable cart smoke: term for {attribute_name}={display_value} not found"
+                  )
+              request_attribute = attribute_slug
+              request_value = str(term["slug"])
+
+          selected_variation = parent_variations[0]
+          selected_variation_id = int(selected_variation["id"])
+          candidate_selection = [{
+              "attribute": request_attribute,
+              "value": request_value,
+          }]
 
           variable_cart_req = urllib.request.Request(
               endpoints["store_cart"],
@@ -347,7 +389,7 @@ jobs:
               raise RuntimeError("variable cart smoke: Cart-Token missing")
 
           variable_payload = json.dumps({
-              "id": int(candidate_variation["id"]),
+              "id": selected_variation_id,
               "quantity": 1,
               "variation": candidate_selection,
           }).encode("utf-8")
@@ -364,12 +406,14 @@ jobs:
           )
           with urllib.request.urlopen(variable_add_req, timeout=30) as response:
               variable_cart = json.loads(response.read().decode("utf-8"))
+
           if not isinstance(variable_cart, dict) or int(variable_cart.get("items_count", 0)) < 1:
               raise RuntimeError("variable cart smoke: add-item returned invalid cart")
+
           print(
               "variable_cart_add_item: OK "
-              f"(parent {parent_id}, variation {candidate_variation['id']}, "
-              f"attributes {candidate_selection})"
+              f"(parent {parent_id}, variation {selected_variation_id}, "
+              f"{request_attribute}={request_value})"
           )
 
           variable_clear_req = urllib.request.Request(
