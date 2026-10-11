@@ -7,8 +7,16 @@ import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface WooStoreApi {
+    @GET("products")
+    suspend fun productVariations(
+        @Query("type") type: String = "variation",
+        @Query("parent") parent: Long,
+        @Query("per_page") perPage: Int = 100
+    ): Response<List<StoreProductVariation>>
+
     @GET("cart")
     suspend fun cart(
         @Header("Cart-Token") cartToken: String? = null
