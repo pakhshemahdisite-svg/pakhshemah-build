@@ -1,8 +1,10 @@
 package com.pakhshmahdi.app
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.mutableStateOf
@@ -35,7 +37,13 @@ class MainActivity : ComponentActivity() {
             OrderStatusWorker.schedule(this)
         }
 
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.BLACK),
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = Color.WHITE,
+                darkScrim = Color.BLACK
+            )
+        )
         setContent {
             PakhshMahdiTheme {
                 PakhshMahdiApp(
