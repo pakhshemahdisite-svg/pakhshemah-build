@@ -30,6 +30,7 @@ import com.pakhshmahdi.app.data.store.PwsCityRepository
 import com.pakhshmahdi.app.data.store.iranProvinces
 import com.pakhshmahdi.app.data.store.moneyLineTotal
 import com.pakhshmahdi.app.data.store.moneyToLong
+import com.pakhshmahdi.app.data.store.normalizeNumericAddressField
 import com.pakhshmahdi.app.ui.components.PMCheckoutSteps
 import com.pakhshmahdi.app.ui.components.PMPrimaryButton
 import com.pakhshmahdi.app.ui.components.PMScreenTopBar
@@ -50,7 +51,9 @@ fun CheckoutScreen(onBack: () -> Unit) {
 
     var firstName by remember { mutableStateOf(savedAddress?.firstName.orEmpty()) }
     var lastName by remember { mutableStateOf(savedAddress?.lastName.orEmpty()) }
-    var phone by remember { mutableStateOf(savedAddress?.phone.orEmpty()) }
+    var phone by remember {
+        mutableStateOf(normalizeNumericAddressField(savedAddress?.phone.orEmpty()))
+    }
     var email by remember {
         mutableStateOf(
             savedAddress?.email.orEmpty()
@@ -70,7 +73,9 @@ fun CheckoutScreen(onBack: () -> Unit) {
     var cityMenu by remember { mutableStateOf(false) }
     var allowSavedCityMatch by remember { mutableStateOf(true) }
     var address1 by remember { mutableStateOf(savedAddress?.address1.orEmpty()) }
-    var postcode by remember { mutableStateOf(savedAddress?.postcode.orEmpty()) }
+    var postcode by remember {
+        mutableStateOf(normalizeNumericAddressField(savedAddress?.postcode.orEmpty()))
+    }
     var note by remember { mutableStateOf("") }
     var couponCode by remember { mutableStateOf("") }
     var provinceMenu by remember { mutableStateOf(false) }
@@ -165,8 +170,8 @@ fun CheckoutScreen(onBack: () -> Unit) {
     }
 
     fun addressOrNull(): StoreAddress? {
-        val cleanPhone = phone.filter(Char::isDigit)
-        val cleanPostcode = postcode.filter(Char::isDigit)
+        val cleanPhone = normalizeNumericAddressField(phone)
+        val cleanPostcode = normalizeNumericAddressField(postcode)
 
         formError = when {
             firstName.isBlank() -> "نام را وارد کنید."
@@ -251,7 +256,11 @@ fun CheckoutScreen(onBack: () -> Unit) {
             ) {
                 CheckoutField(firstName, { firstName = it }, "نام")
                 CheckoutField(lastName, { lastName = it }, "نام خانوادگی")
-                CheckoutField(phone, { phone = it.filter(Char::isDigit).take(11) }, "شماره موبایل")
+                CheckoutField(
+                    phone,
+                    { phone = normalizeNumericAddressField(it).take(11) },
+                    "شماره موبایل"
+                )
                 CheckoutField(email, { email = it }, "ایمیل (اختیاری)")
 
                 Box(Modifier.fillMaxWidth()) {
@@ -358,7 +367,11 @@ fun CheckoutScreen(onBack: () -> Unit) {
 
                 Spacer(Modifier.height(10.dp))
                 CheckoutField(address1, { address1 = it }, "آدرس کامل", singleLine = false)
-                CheckoutField(postcode, { postcode = it.filter(Char::isDigit).take(10) }, "کد پستی")
+                CheckoutField(
+                    postcode,
+                    { postcode = normalizeNumericAddressField(it).take(10) },
+                    "کد پستی"
+                )
 
                 if (!formError.isNullOrBlank()) {
                     Text(
