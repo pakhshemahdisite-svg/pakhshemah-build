@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,13 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.pakhshmahdi.app.core.AppConfig
 import com.pakhshmahdi.app.data.cart.CartStore
 import com.pakhshmahdi.app.data.model.Category
@@ -43,13 +39,6 @@ import com.pakhshmahdi.app.ui.components.ProductCard
 import com.pakhshmahdi.app.ui.components.ProductImage
 import com.pakhshmahdi.app.ui.theme.PMGoldDeep
 import com.pakhshmahdi.app.ui.theme.PMTheme
-import kotlinx.coroutines.delay
-
-private val approvedBanners = listOf(
-    "https://raw.githubusercontent.com/pakhshemahdisite-svg/pakhshemah-build/main/assets/app-ui/home-banner-1.jpg",
-    "https://raw.githubusercontent.com/pakhshemahdisite-svg/pakhshemah-build/main/assets/app-ui/home-banner-2.jpg",
-    "https://raw.githubusercontent.com/pakhshemahdisite-svg/pakhshemah-build/main/assets/app-ui/home-banner-3.jpg"
-)
 
 @Composable
 fun HomeScreen(
@@ -98,7 +87,7 @@ fun HomeScreen(
             )
         }
 
-        item { ApprovedHeroSlider(onCatalog = onCatalog) }
+        item { PremiumHeroBanner(onCatalog = onCatalog) }
 
         if (state.data.categories.isNotEmpty()) {
             item {
@@ -265,101 +254,114 @@ private fun HeaderCircleButton(
 }
 
 @Composable
-private fun ApprovedHeroSlider(onCatalog: () -> Unit) {
+private fun PremiumHeroBanner(onCatalog: () -> Unit) {
     val c = PMTheme.colors
-    val pagerState = rememberPagerState(pageCount = { approvedBanners.size })
 
-    LaunchedEffect(pagerState.currentPage) {
-        delay(4500)
-        pagerState.animateScrollToPage((pagerState.currentPage + 1) % approvedBanners.size)
-    }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .height(196.dp)
+            .clip(RoundedCornerShape(26.dp))
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        Color(0xFF050505),
+                        Color(0xFF111111),
+                        Color(0xFF241A08)
+                    )
+                )
+            )
+            .clickable(onClick = onCatalog)
+    ) {
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(x = (-28).dp, y = (-34).dp)
+                .size(132.dp)
+                .clip(CircleShape)
+                .background(c.accentGold.copy(alpha = .10f))
+        )
 
-    Column {
-        HorizontalPager(
-            state = pagerState,
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            pageSpacing = 9.dp
-        ) { page ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(218.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .clickable(onClick = onCatalog)
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(x = 34.dp, y = 38.dp)
+                .size(150.dp)
+                .clip(CircleShape)
+                .background(c.accentGold.copy(alpha = .08f))
+        )
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 18.dp)
+                .widthIn(max = 215.dp),
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                "پخش مهدی",
+                color = c.accentGold,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Black
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "عمده‌فروشی تخصصی\nلوازم آشپزخانه",
+                color = Color.White,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Black,
+                textAlign = TextAlign.End
+            )
+            Spacer(Modifier.height(7.dp))
+            Text(
+                "ارسال عمده به سراسر کشور",
+                color = Color.White.copy(alpha = .74f),
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(Modifier.height(12.dp))
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = c.accentGold,
+                border = BorderStroke(1.dp, PMGoldDeep.copy(alpha = .55f))
             ) {
-                AsyncImage(
-                    model = approvedBanners[page],
-                    contentDescription = "بنر پخش مهدی ${page + 1}",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color.Black.copy(alpha = .34f),
-                                    Color.Black.copy(alpha = .08f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                )
-
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .width(190.dp)
-                        .padding(start = 18.dp),
-                    horizontalAlignment = Alignment.Start
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        "کیفیت در\nهر آشپزخانه",
-                        color = Color.White,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Black,
-                        lineHeight = MaterialTheme.typography.headlineMedium.lineHeight
+                    Icon(
+                        Icons.Outlined.ShoppingBag,
+                        contentDescription = null,
+                        tint = c.primaryDark,
+                        modifier = Modifier.size(18.dp)
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.width(6.dp))
                     Text(
-                        "انتخاب حرفه‌ای‌ها\nبا پخش مهدی",
-                        color = Color.White.copy(alpha = .96f),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold
+                        "مشاهده محصولات",
+                        color = c.primaryDark,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Black
                     )
-                    Spacer(Modifier.height(12.dp))
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = c.accentGold,
-                        border = BorderStroke(1.dp, PMGoldDeep.copy(alpha = .45f))
-                    ) {
-                        Text(
-                            "مشاهده محصولات  ‹",
-                            modifier = Modifier.padding(horizontal = 13.dp, vertical = 8.dp),
-                            color = c.primaryDark,
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Black
-                        )
-                    }
                 }
             }
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 9.dp),
-            horizontalArrangement = Arrangement.Center
+        Surface(
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp)
+                .size(104.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = Color.Black.copy(alpha = .42f),
+            border = BorderStroke(1.dp, c.accentGold.copy(alpha = .48f))
         ) {
-            approvedBanners.indices.forEach { index ->
-                Surface(
-                    modifier = Modifier
-                        .padding(horizontal = 3.dp)
-                        .width(if (pagerState.currentPage == index) 22.dp else 8.dp)
-                        .height(7.dp),
-                    shape = CircleShape,
-                    color = if (pagerState.currentPage == index) PMGoldDeep else c.border
-                ) {}
+            Box(contentAlignment = Alignment.Center) {
+                BrandLogo(
+                    Modifier
+                        .width(88.dp)
+                        .height(76.dp)
+                        .padding(6.dp)
+                )
             }
         }
     }
