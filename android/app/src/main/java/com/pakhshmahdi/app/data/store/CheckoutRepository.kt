@@ -30,8 +30,13 @@ class CheckoutRepository {
             }
 
             val freshVariation = line.variation?.let { previous ->
-                freshProduct.variations.firstOrNull { it.id == previous.id }
+                val fresh = freshProduct.variations.firstOrNull { it.id == previous.id }
                     ?: throw StoreApiException("گزینه انتخاب‌شده «${freshProduct.name}» دیگر موجود نیست.")
+
+                fresh.copy(
+                    attributes = if (fresh.attributes.isNotEmpty()) fresh.attributes else previous.attributes,
+                    selection = if (fresh.selection.isNotEmpty()) fresh.selection else previous.selection
+                )
             }
 
             if (freshVariation != null && freshVariation.stockStatus != "instock") {
@@ -66,13 +71,30 @@ class CheckoutRepository {
 
         var cart: StoreCart? = null
         lines.forEach { line ->
-            val itemId = line.variation?.id ?: line.product.id
+            val selectedVariation = line.variation
+            val variationPayload = selectedVariation
+                ?.let { VariationResolver.selectionForCart(line.product, it) }
+                .orEmpty()
+                .map { item ->
+                    StoreVariationAttribute(
+                        attribute = item.attribute,
+                        value = item.value
+                    )
+                }
+
+            if (selectedVariation != null && variationPayload.isEmpty()) {
+                throw StoreApiException(
+                    "اطلاعات متغیر انتخاب‌شده برای «${line.product.name}» کامل نیست. گزینه محصول را دوباره انتخاب کنید."
+                )
+            }
+
             cart = requireBody(
                 api.addItem(
                     token,
                     AddItemRequest(
-                        id = itemId,
-                        quantity = line.quantity
+                        id = selectedVariation?.id ?: line.product.id,
+                        quantity = line.quantity,
+                        variation = variationPayload
                     )
                 ),
                 "افزودن محصول به سبد سرور انجام نشد."
