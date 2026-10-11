@@ -11,7 +11,8 @@ object VariationResolver {
 
     fun enrich(
         product: Product,
-        storeVariations: List<StoreProductVariation>
+        storeVariations: List<StoreProductVariation>,
+        termSlugs: Map<String, Map<String, String>> = emptyMap()
     ): Product {
         if (product.variations.isEmpty()) return product
 
@@ -21,7 +22,7 @@ object VariationResolver {
             val store = storeById[variation.id]
             val exactSelection = store?.let { selectionFromPermalink(product, variation, it) }
                 .orEmpty()
-                .ifEmpty { selectionFromAttributesMap(product, variation.attributes) }
+                .ifEmpty { selectionFromAttributesMap(product, variation.attributes, termSlugs) }
 
             val displayAttributes = when {
                 variation.attributes.isNotEmpty() -> variation.attributes
@@ -31,7 +32,7 @@ object VariationResolver {
             }
 
             val resolvedSelection = exactSelection.ifEmpty {
-                selectionFromAttributesMap(product, displayAttributes)
+                selectionFromAttributesMap(product, displayAttributes, termSlugs)
             }
 
             variation.copy(
@@ -47,7 +48,7 @@ object VariationResolver {
         product: Product,
         variation: ProductVariation
     ): List<ProductVariationSelection> =
-        variation.selection.ifEmpty { selectionFromAttributesMap(product, variation.attributes) }
+        variation.selection.ifEmpty { selectionFromAttributesMap(product, variation.attributes, emptyMap()) }
 
     private fun selectionFromPermalink(
         product: Product,
@@ -107,7 +108,8 @@ object VariationResolver {
 
     private fun selectionFromAttributesMap(
         product: Product,
-        attributes: Map<String, String>
+        attributes: Map<String, String>,
+        termSlugs: Map<String, Map<String, String>>
     ): List<ProductVariationSelection> =
         attributes.mapNotNull { (labelOrSlug, displayValue) ->
             if (displayValue.isBlank()) return@mapNotNull null
@@ -126,9 +128,20 @@ object VariationResolver {
                 else -> parent.name
             }
 
+            val requestValue = if (parent?.slug?.startsWith("pa_") == true) {
+                termSlugs[parent.slug]
+                    ?.entries
+                    ?.firstOrNull { normalize(it.key) == normalize(displayValue) }
+                    ?.value
+                    ?.takeIf { it.isNotBlank() }
+                    ?: displayValue
+            } else {
+                displayValue
+            }
+
             ProductVariationSelection(
                 attribute = requestAttribute,
-                value = displayValue,
+                value = requestValue,
                 label = parent?.name ?: labelOrSlug,
                 displayValue = displayValue
             )
