@@ -21,7 +21,7 @@ object VariationResolver {
             val store = storeById[variation.id]
             val exactSelection = store?.let { selectionFromPermalink(product, variation, it) }
                 .orEmpty()
-                .ifEmpty { selectionFromDisplayAttributes(product, variation) }
+                .ifEmpty { selectionFromAttributesMap(product, variation.attributes) }
 
             val displayAttributes = when {
                 variation.attributes.isNotEmpty() -> variation.attributes
@@ -30,9 +30,13 @@ object VariationResolver {
                 else -> fallbackDisplayAttributes(product, index)
             }
 
+            val resolvedSelection = exactSelection.ifEmpty {
+                selectionFromAttributesMap(product, displayAttributes)
+            }
+
             variation.copy(
                 attributes = displayAttributes,
-                selection = exactSelection
+                selection = resolvedSelection
             )
         }
 
@@ -43,7 +47,7 @@ object VariationResolver {
         product: Product,
         variation: ProductVariation
     ): List<ProductVariationSelection> =
-        variation.selection.ifEmpty { selectionFromDisplayAttributes(product, variation) }
+        variation.selection.ifEmpty { selectionFromAttributesMap(product, variation.attributes) }
 
     private fun selectionFromPermalink(
         product: Product,
@@ -101,11 +105,11 @@ object VariationResolver {
             }
     }
 
-    private fun selectionFromDisplayAttributes(
+    private fun selectionFromAttributesMap(
         product: Product,
-        variation: ProductVariation
+        attributes: Map<String, String>
     ): List<ProductVariationSelection> =
-        variation.attributes.mapNotNull { (labelOrSlug, displayValue) ->
+        attributes.mapNotNull { (labelOrSlug, displayValue) ->
             if (displayValue.isBlank()) return@mapNotNull null
 
             val parent = product.attributes.firstOrNull { attribute ->
