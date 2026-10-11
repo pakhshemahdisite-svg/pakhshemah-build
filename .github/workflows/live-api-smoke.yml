@@ -331,6 +331,10 @@ jobs:
                   break
 
           if candidate_variation is None or not candidate_selection:
+              print(
+                  "variable cart debug: "
+                  + json.dumps(store_variations[:2], ensure_ascii=False, indent=2)
+              )
               raise RuntimeError("variable cart smoke: variation attributes missing")
 
           variable_cart_req = urllib.request.Request(
