@@ -95,6 +95,18 @@ data class StoreProductVariation(
     val permalink: String = ""
 )
 
+data class StoreProductAttributeTaxonomy(
+    val id: Long,
+    val name: String = "",
+    val taxonomy: String = ""
+)
+
+data class StoreProductAttributeTerm(
+    val id: Long,
+    val name: String = "",
+    val slug: String = ""
+)
+
 data class StoreVariationAttribute(
     val attribute: String,
     val value: String
