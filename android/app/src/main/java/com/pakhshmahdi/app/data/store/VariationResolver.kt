@@ -20,7 +20,9 @@ object VariationResolver {
 
         val enriched = product.variations.mapIndexed { index, variation ->
             val store = storeById[variation.id]
-            val exactSelection = store?.let { selectionFromPermalink(product, variation, it) }
+            val exactSelection = store?.let {
+                selectionFromStoreMetadata(product, variation, it, termSlugs)
+            }
                 .orEmpty()
                 .ifEmpty { selectionFromAttributesMap(product, variation.attributes, termSlugs) }
 
@@ -49,6 +51,58 @@ object VariationResolver {
         variation: ProductVariation
     ): List<ProductVariationSelection> =
         variation.selection.ifEmpty { selectionFromAttributesMap(product, variation.attributes, emptyMap()) }
+
+    private fun selectionFromStoreMetadata(
+        product: Product,
+        variation: ProductVariation,
+        store: StoreProductVariation,
+        termSlugs: Map<String, Map<String, String>>
+    ): List<ProductVariationSelection> {
+        val permalinkSelection = selectionFromPermalink(product, variation, store)
+        if (permalinkSelection.isNotEmpty()) return permalinkSelection
+
+        val decodedSlug = decode(store.slug)
+        if (decodedSlug.isBlank()) return emptyList()
+
+        val matched = product.attributes.mapNotNull { attribute ->
+            if (attribute.options.isEmpty()) return@mapNotNull null
+
+            val option = attribute.options
+                .sortedByDescending { normalizeForMatch(it).length }
+                .firstOrNull { candidate ->
+                    val normalizedCandidate = normalizeForMatch(candidate)
+                    normalizedCandidate.length >= 2 &&
+                        normalizeForMatch(decodedSlug).contains(normalizedCandidate)
+                }
+                ?: return@mapNotNull null
+
+            val requestAttribute = when {
+                attribute.slug.startsWith("pa_") -> attribute.slug
+                attribute.slug.startsWith("attribute_") -> attribute.slug
+                else -> attribute.name
+            }
+
+            val requestValue = if (attribute.slug.startsWith("pa_")) {
+                termSlugs[attribute.slug]
+                    ?.entries
+                    ?.firstOrNull { normalize(it.key) == normalize(option) }
+                    ?.value
+                    ?.takeIf { it.isNotBlank() }
+                    ?: option
+            } else {
+                option
+            }
+
+            ProductVariationSelection(
+                attribute = requestAttribute,
+                value = requestValue,
+                label = attribute.name.ifBlank { attribute.slug },
+                displayValue = option
+            )
+        }
+
+        return matched
+    }
 
     private fun selectionFromPermalink(
         product: Product,
@@ -152,9 +206,12 @@ object VariationResolver {
         variationIndex: Int
     ): Map<String, String> {
         val variationAttributes = product.attributes.filter { it.variation }
-        if (variationAttributes.size != 1) return emptyMap()
+        val candidates = variationAttributes.ifEmpty {
+            product.attributes.filter { it.options.size >= product.variations.size }
+        }
+        if (candidates.size != 1) return emptyMap()
 
-        val attribute = variationAttributes.first()
+        val attribute = candidates.first()
         val option = attribute.options.getOrNull(variationIndex) ?: return emptyMap()
         return mapOf(attribute.name to option)
     }
@@ -203,4 +260,14 @@ object VariationResolver {
             .replace("-", "")
             .replace("_", "")
             .replace(" ", "")
+
+    private fun normalizeForMatch(value: String): String =
+        decode(value)
+            .trim()
+            .lowercase()
+            .replace("-", "")
+            .replace("_", "")
+            .replace(" ", "")
+            .replace("ي", "ی")
+            .replace("ك", "ک")
 }
