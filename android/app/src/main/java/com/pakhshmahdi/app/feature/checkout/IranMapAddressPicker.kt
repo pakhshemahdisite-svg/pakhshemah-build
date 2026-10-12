@@ -3,7 +3,6 @@ package com.pakhshmahdi.app.feature.checkout
 import android.content.Context
 import android.location.Geocoder
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -22,9 +21,13 @@ import androidx.compose.ui.window.DialogProperties
 import com.pakhshmahdi.app.ui.theme.PMTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
@@ -35,9 +38,18 @@ data class MapAddressSelection(
     val latitude: Double,
     val longitude: Double,
     val addressLine: String = "",
-    val provinceName: String = "",
+    val provinceName: String = "تهران",
     val cityName: String = ""
 )
+
+private val TEHRAN_MAP_BOUNDS = BoundingBox(
+    36.35,
+    53.25,
+    34.75,
+    50.10
+)
+
+private val reverseGeocodeHttp = OkHttpClient()
 
 @Composable
 fun IranMapAddressPicker(
@@ -50,7 +62,7 @@ fun IranMapAddressPicker(
     var resolvedSelection by remember { mutableStateOf<MapAddressSelection?>(null) }
     var resolving by remember { mutableStateOf(false) }
     var mapMessage by remember {
-        mutableStateOf("روی محل دقیق آدرس در نقشه لمس کنید.")
+        mutableStateOf("روی محل دقیق آدرس در استان تهران لمس کنید.")
     }
 
     val mapView = remember(context) {
@@ -59,10 +71,11 @@ fun IranMapAddressPicker(
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
-            minZoomLevel = 4.0
+            minZoomLevel = 8.0
             maxZoomLevel = 19.0
-            controller.setZoom(5.3)
-            controller.setCenter(GeoPoint(32.4279, 53.6880))
+            setScrollableAreaLimitDouble(TEHRAN_MAP_BOUNDS)
+            controller.setZoom(9.4)
+            controller.setCenter(GeoPoint(35.6892, 51.3890))
         }
     }
 
@@ -78,8 +91,8 @@ fun IranMapAddressPicker(
             override fun singleTapConfirmedHelper(point: GeoPoint?): Boolean {
                 if (point == null) return false
 
-                if (!isInsideIran(point.latitude, point.longitude)) {
-                    mapMessage = "لطفاً یک نقطه داخل ایران انتخاب کنید."
+                if (!isInsideTehranProvinceBounds(point.latitude, point.longitude)) {
+                    mapMessage = "لطفاً یک نقطه داخل استان تهران انتخاب کنید."
                     return true
                 }
 
@@ -88,6 +101,7 @@ fun IranMapAddressPicker(
                 if (!mapView.overlays.contains(marker)) {
                     mapView.overlays.add(marker)
                 }
+                mapView.controller.animateTo(point)
                 mapView.invalidate()
                 return true
             }
@@ -112,20 +126,17 @@ fun IranMapAddressPicker(
     LaunchedEffect(selectedPoint) {
         val point = selectedPoint ?: return@LaunchedEffect
         resolving = true
+        resolvedSelection = null
         mapMessage = "در حال دریافت آدرس این نقطه..."
 
-        val result = reverseGeocode(
+        val result = reverseGeocodeTehran(
             context = context,
             latitude = point.latitude,
             longitude = point.longitude
         )
 
         resolvedSelection = result
-        mapMessage = if (result.addressLine.isNotBlank()) {
-            result.addressLine
-        } else {
-            "موقعیت انتخاب شد. در صورت نیاز متن آدرس را در فرم تکمیل کنید."
-        }
+        mapMessage = result.addressLine
         resolving = false
     }
 
@@ -173,7 +184,7 @@ fun IranMapAddressPicker(
                             color = c.textPrimary
                         )
                         Text(
-                            "نقشه ایران • لمس برای تعیین موقعیت",
+                            "استان تهران • لمس برای تعیین موقعیت",
                             style = MaterialTheme.typography.bodySmall,
                             color = c.textSecondary
                         )
@@ -279,34 +290,113 @@ fun IranMapAddressPicker(
 }
 
 @Suppress("DEPRECATION")
-private suspend fun reverseGeocode(
+private suspend fun reverseGeocodeTehran(
     context: Context,
     latitude: Double,
     longitude: Double
 ): MapAddressSelection = withContext(Dispatchers.IO) {
-    val address = runCatching {
+    val androidAddress = runCatching {
         Geocoder(context, Locale("fa", "IR"))
             .getFromLocation(latitude, longitude, 1)
             ?.firstOrNull()
     }.getOrNull()
 
-    val addressLine = address?.getAddressLine(0)
-        ?.replace("ایران", "")
-        ?.trim(' ', '،', ',')
+    val androidLine = androidAddress
+        ?.getAddressLine(0)
+        ?.cleanIranianAddress()
         .orEmpty()
 
+    val androidCity = listOf(
+        androidAddress?.locality,
+        androidAddress?.subAdminArea,
+        androidAddress?.subLocality
+    ).firstOrNull { !it.isNullOrBlank() }.orEmpty()
+
+    if (androidLine.isNotBlank()) {
+        return@withContext MapAddressSelection(
+            latitude = latitude,
+            longitude = longitude,
+            addressLine = androidLine,
+            provinceName = "تهران",
+            cityName = androidCity.ifBlank { "تهران" }
+        )
+    }
+
+    val online = reverseWithNominatim(latitude, longitude)
+    if (online != null && online.addressLine.isNotBlank()) {
+        return@withContext online
+    }
+
+    val coordinateText = String.format(Locale.US, "%.5f, %.5f", latitude, longitude)
     MapAddressSelection(
         latitude = latitude,
         longitude = longitude,
-        addressLine = addressLine,
-        provinceName = address?.adminArea.orEmpty(),
-        cityName = listOf(
-            address?.locality,
-            address?.subAdminArea,
-            address?.subLocality
-        ).firstOrNull { !it.isNullOrBlank() }.orEmpty()
+        addressLine = "استان تهران، موقعیت انتخاب‌شده روی نقشه ($coordinateText)",
+        provinceName = "تهران",
+        cityName = "تهران"
     )
 }
 
-private fun isInsideIran(latitude: Double, longitude: Double): Boolean =
-    latitude in 24.0..40.2 && longitude in 43.5..64.2
+private fun reverseWithNominatim(
+    latitude: Double,
+    longitude: Double
+): MapAddressSelection? {
+    val url =
+        "https://nominatim.openstreetmap.org/reverse" +
+            "?format=jsonv2" +
+            "&lat=$latitude" +
+            "&lon=$longitude" +
+            "&addressdetails=1" +
+            "&accept-language=fa"
+
+    val request = Request.Builder()
+        .url(url)
+        .header("User-Agent", "PakhshMahdi-Android/0.10.12 (pakhshemahdi.com)")
+        .header("Accept", "application/json")
+        .build()
+
+    return runCatching {
+        reverseGeocodeHttp.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) return@use null
+
+            val raw = response.body?.string().orEmpty()
+            if (raw.isBlank()) return@use null
+
+            val root = JSONObject(raw)
+            val address = root.optJSONObject("address") ?: JSONObject()
+
+            val city = sequenceOf(
+                "city",
+                "town",
+                "village",
+                "municipality",
+                "county",
+                "city_district",
+                "suburb"
+            )
+                .map { key -> address.optString(key).trim() }
+                .firstOrNull { it.isNotBlank() }
+                .orEmpty()
+
+            val display = root.optString("display_name")
+                .cleanIranianAddress()
+
+            MapAddressSelection(
+                latitude = latitude,
+                longitude = longitude,
+                addressLine = display,
+                provinceName = "تهران",
+                cityName = city.ifBlank { "تهران" }
+            )
+        }
+    }.getOrNull()
+}
+
+private fun String.cleanIranianAddress(): String =
+    replace("ایران", "")
+        .replace("Iran", "", ignoreCase = true)
+        .replace(Regex("""\s*,\s*,"""), "،")
+        .trim(' ', '،', ',')
+
+private fun isInsideTehranProvinceBounds(latitude: Double, longitude: Double): Boolean =
+    latitude in 34.75..36.35 && longitude in 50.10..53.25
