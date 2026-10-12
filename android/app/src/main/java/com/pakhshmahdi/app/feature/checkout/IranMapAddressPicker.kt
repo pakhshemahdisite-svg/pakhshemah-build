@@ -276,7 +276,7 @@ fun IranMapAddressPicker(
                     shape = RoundedCornerShape(17.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = c.primary,
-                        contentColor = Color(0xFF111111)
+                        contentColor = Color.White
                     )
                 ) {
                     Text(
