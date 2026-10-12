@@ -49,6 +49,56 @@ class VariationResolverTest {
     }
 
     @Test
+    fun resolvesRealColorNameFromEncodedVariationSlug() {
+        val product = Product(
+            id = 25671,
+            name = "ملاقه نقلی یونیک",
+            type = "variable",
+            price = "97000",
+            attributes = listOf(
+                ProductAttribute(
+                    name = "رنگ",
+                    slug = "pa_color",
+                    options = listOf("طلایی", "مسی"),
+                    variation = true
+                )
+            ),
+            variations = listOf(
+                ProductVariation(id = 25674, price = "97000"),
+                ProductVariation(id = 25675, price = "97000")
+            )
+        )
+
+        val enriched = VariationResolver.enrich(
+            product = product,
+            storeVariations = listOf(
+                StoreProductVariation(
+                    id = 25674,
+                    slug = "%D9%85%D9%84%D8%A7%D9%82%D9%87-%D9%86%D9%82%D9%84%DB%8C-%DB%8C%D9%88%D9%86%DB%8C%DA%A9-%D8%B7%D9%84%D8%A7%DB%8C%DB%8C"
+                ),
+                StoreProductVariation(
+                    id = 25675,
+                    slug = "%D9%85%D9%84%D8%A7%D9%82%D9%87-%D9%86%D9%82%D9%84%DB%8C-%DB%8C%D9%88%D9%86%DB%8C%DA%A9-%D9%85%D8%B3%DB%8C-2"
+                )
+            ),
+            termSlugs = mapOf(
+                "pa_color" to mapOf(
+                    "طلایی" to "gold",
+                    "مسی" to "copper"
+                )
+            )
+        )
+
+        assertEquals("رنگ", enriched.variations[0].selection.single().label)
+        assertEquals("طلایی", enriched.variations[0].selection.single().displayValue)
+        assertEquals("gold", enriched.variations[0].selection.single().value)
+
+        assertEquals("رنگ", enriched.variations[1].selection.single().label)
+        assertEquals("مسی", enriched.variations[1].selection.single().displayValue)
+        assertEquals("copper", enriched.variations[1].selection.single().value)
+    }
+
+    @Test
     fun productSpecificAttributeKeepsAttributeQueryKey() {
         val product = Product(
             id = 200,
