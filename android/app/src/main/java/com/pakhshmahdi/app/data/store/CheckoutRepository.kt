@@ -15,6 +15,8 @@ class CheckoutRepository {
     private val api = StoreApiClient.api
     private val gson = Gson()
     private var preparedLines: List<CartLine> = emptyList()
+    private var lastCalculatedCart: StoreCart? = null
+    private var lastFallbackRateId: String? = null
 
     suspend fun refreshLines(lines: List<CartLine>): List<CartLine> {
         if (lines.isEmpty()) throw StoreApiException("سبد خرید خالی است.")
@@ -176,10 +178,9 @@ class CheckoutRepository {
             }
         }
 
-        // The live site now injects a WooCommerce Store API-compatible fallback
-        // rate based on the site's real PWS weight/class rules. If an older Store
-        // API response still arrives without rates, ask the same server-side
-        // calculator for the rate and immediately select it in WooCommerce.
+        // If WooCommerce does not expose a shipping rate in Store API, use the
+        // site's own shipping calculator. Some Persian shipping plugins calculate
+        // correctly but do not serialize their rate back into Store API JSON.
         if (cart.needsShipping && !cart.hasShippingRates() && preparedLines.isNotEmpty()) {
             val quote = runCatching {
                 ApiClient.api.shippingQuote(
@@ -196,40 +197,78 @@ class CheckoutRepository {
                     )
                 )
             }.getOrElse {
-                throw StoreApiException("هزینه ارسال برای این سفارش محاسبه نشد. دوباره تلاش کنید.")
+                throw StoreApiException(
+                    "هزینه ارسال برای شهر انتخاب‌شده محاسبه نشد. شهر را دوباره انتخاب کنید."
+                )
             }
 
-            val selected = api.selectShippingRate(
-                token,
-                SelectShippingRateRequest(
-                    packageId = 0,
-                    rateId = quote.rateId
-                )
-            )
+            lastFallbackRateId = quote.rateId
 
-            cart = requireBody(
-                selected,
-                "هزینه ارسال محاسبه شد اما روش ارسال در ووکامرس انتخاب نشد."
-            )
+            val selectedResponse = runCatching {
+                api.selectShippingRate(
+                    token,
+                    SelectShippingRateRequest(
+                        packageId = 0,
+                        rateId = quote.rateId
+                    )
+                )
+            }.getOrNull()
+
+            val selectedCart = selectedResponse
+                ?.takeIf { it.isSuccessful }
+                ?.body()
+
+            if (selectedCart != null) {
+                cart = selectedCart
+            }
+
+            // The quote itself is authoritative for the app. If Store API still
+            // omits the rate, expose the calculated rate locally instead of
+            // incorrectly blocking checkout with an address/postcode error.
+            if (!cart.hasShippingRates()) {
+                cart = cart.withFallbackShippingQuote(quote)
+            }
         }
 
         if (cart.needsShipping && !cart.hasShippingRates()) {
-            throw StoreApiException("برای این آدرس امکان محاسبه ارسال وجود ندارد. آدرس و کدپستی را بررسی کنید.")
+            throw StoreApiException(
+                "برای شهر انتخاب‌شده روش ارسال پیدا نشد. شهر را دوباره انتخاب کنید."
+            )
         }
 
+        lastCalculatedCart = cart
         LocalStore.saveCheckoutAddress(normalizedAddress)
         return cart
     }
 
     suspend fun selectShipping(packageId: Int, rateId: String): StoreCart {
         val token = ensureToken()
-        return requireBody(
+        val response = runCatching {
             api.selectShippingRate(
                 token,
                 SelectShippingRateRequest(packageId = packageId, rateId = rateId)
-            ),
-            "انتخاب روش ارسال انجام نشد."
-        )
+            )
+        }.getOrNull()
+
+        val serverCart = response
+            ?.takeIf { it.isSuccessful }
+            ?.body()
+
+        if (serverCart != null && serverCart.hasShippingRates()) {
+            lastCalculatedCart = serverCart
+            return serverCart
+        }
+
+        if (rateId == lastFallbackRateId) {
+            return lastCalculatedCart
+                ?: throw StoreApiException("روش ارسال محاسبه‌شده در دسترس نیست. دوباره محاسبه کنید.")
+        }
+
+        if (response != null) {
+            return requireBody(response, "انتخاب روش ارسال انجام نشد.")
+        }
+
+        throw StoreApiException("انتخاب روش ارسال انجام نشد.")
     }
 
     suspend fun submitOrder(
@@ -322,6 +361,43 @@ class CheckoutRepository {
             product = product,
             storeVariations = storeVariations,
             termSlugs = termSlugs
+        )
+    }
+
+    private fun StoreCart.withFallbackShippingQuote(
+        quote: ShippingQuoteResponse
+    ): StoreCart {
+        val previousShipping = moneyToLong(totals.totalShipping) ?: 0L
+        val quotedShipping = moneyToLong(quote.price) ?: 0L
+        val currentTotal = moneyToLong(totals.totalPrice)
+
+        val adjustedTotal = currentTotal
+            ?.let { total ->
+                (total - previousShipping + quotedShipping)
+                    .coerceAtLeast(0L)
+                    .toString()
+            }
+            ?: totals.totalPrice
+
+        return copy(
+            shippingRates = listOf(
+                StoreShippingPackage(
+                    packageId = 0,
+                    name = "ارسال",
+                    shippingRates = listOf(
+                        StoreShippingRate(
+                            rateId = quote.rateId,
+                            name = quote.name.ifBlank { "ارسال" },
+                            price = quote.price,
+                            selected = true
+                        )
+                    )
+                )
+            ),
+            totals = totals.copy(
+                totalShipping = quote.price,
+                totalPrice = adjustedTotal
+            )
         )
     }
 
