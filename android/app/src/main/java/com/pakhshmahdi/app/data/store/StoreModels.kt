@@ -89,6 +89,8 @@ data class UpdateCustomerRequest(
 
 data class StoreProductVariation(
     val id: Long,
+    val name: String = "",
+    val slug: String = "",
     val variation: String = "",
     val permalink: String = ""
 )
