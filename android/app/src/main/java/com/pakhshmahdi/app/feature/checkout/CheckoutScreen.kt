@@ -497,10 +497,19 @@ fun CheckoutScreen(onBack: () -> Unit) {
                 ) {
                     val methods = cart?.paymentMethods.orEmpty()
                     if (methods.isEmpty()) {
-                        Text(
-                            "روش پرداختی از فروشگاه دریافت نشد.",
-                            color = c.error
-                        )
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = PMTheme.shapes.medium,
+                            color = c.accentGold.copy(alpha = .10f),
+                            border = BorderStroke(1.dp, c.accentGold.copy(alpha = .28f))
+                        ) {
+                            Text(
+                                "درگاه پرداخت هنوز فعال نشده است. سبد خرید، آدرس و روش ارسال قابل بررسی هستند و پس از اتصال درگاه، پرداخت نهایی فعال می‌شود.",
+                                modifier = Modifier.padding(12.dp),
+                                color = c.textSecondary,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     } else {
                         methods.forEach { method ->
                             PMSelectableCard(
@@ -559,7 +568,11 @@ fun CheckoutScreen(onBack: () -> Unit) {
                 shadowElevation = 10.dp
             ) {
                 PMPrimaryButton(
-                    text = "پرداخت و ثبت نهایی",
+                    text = if (cart?.paymentMethods.isNullOrEmpty()) {
+                        "درگاه پرداخت هنوز فعال نشده"
+                    } else {
+                        "پرداخت و ثبت نهایی"
+                    },
                     onClick = { addressOrNull()?.let { vm.submit(it, note) } },
                     modifier = Modifier
                         .fillMaxWidth()
