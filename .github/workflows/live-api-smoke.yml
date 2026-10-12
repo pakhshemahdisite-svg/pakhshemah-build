@@ -3,7 +3,7 @@ name: Live API Smoke Test
 on:
   workflow_dispatch:
   push:
-    branches: [ "main", "release/0.10.7", "release/0.10.8", "release/0.10.9", "release/0.10.10" ]
+    branches: [ "main", "release/0.10.7", "release/0.10.8", "release/0.10.9", "release/0.10.10", "release/0.10.11" ]
     paths:
       - ".github/workflows/live-api-smoke.yml"
 
@@ -169,7 +169,7 @@ jobs:
               "lines": [{"id": candidate["id"], "quantity": 6}],
               "state": "558",
               "city": city_id,
-              "postcode": "1111111111",
+              "postcode": "",
           }).encode("utf-8")
           quote_req = urllib.request.Request(
               "https://pakhshemahdi.com/wp-json/pm-app/v1/shipping-quote",
@@ -233,7 +233,7 @@ jobs:
                   "address_2": "",
                   "city": city_id,
                   "state": "558",
-                  "postcode": "1111111111",
+                  "postcode": "",
                   "country": "IR",
                   "phone": "09000000000",
                   "email": "",
@@ -246,7 +246,7 @@ jobs:
                   "address_2": "",
                   "city": city_id,
                   "state": "558",
-                  "postcode": "1111111111",
+                  "postcode": "",
                   "country": "IR",
               },
           }).encode("utf-8")
