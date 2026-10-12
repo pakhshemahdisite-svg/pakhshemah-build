@@ -78,7 +78,7 @@ class CheckoutViewModel : ViewModel() {
                 .onFailure { error ->
                     _state.value = _state.value.copy(
                         loading = false,
-                        error = friendlyError(error, "آماده‌سازی پرداخت انجام نشد.")
+                        error = friendlyError(error, "آماده‌سازی سبد خرید انجام نشد.")
                     )
                 }
         }
