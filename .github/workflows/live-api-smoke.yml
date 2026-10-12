@@ -3,7 +3,7 @@ name: Live API Smoke Test
 on:
   workflow_dispatch:
   push:
-    branches: [ "main", "release/0.10.7", "release/0.10.8", "release/0.10.9" ]
+    branches: [ "main", "release/0.10.7", "release/0.10.8", "release/0.10.9", "release/0.10.10" ]
     paths:
       - ".github/workflows/live-api-smoke.yml"
 
@@ -166,7 +166,7 @@ jobs:
           print(f"pws_cities: OK (city {city_id})")
 
           quote_payload = json.dumps({
-              "lines": [{"id": candidate["id"], "quantity": 1}],
+              "lines": [{"id": candidate["id"], "quantity": 6}],
               "state": "558",
               "city": city_id,
               "postcode": "1111111111",
@@ -203,7 +203,7 @@ jobs:
               raise RuntimeError("cart smoke: Cart-Token header missing")
 
           add_payload = json.dumps(
-              {"id": candidate["id"], "quantity": 1}
+              {"id": candidate["id"], "quantity": 6}
           ).encode("utf-8")
           add_req = urllib.request.Request(
               "https://pakhshemahdi.com/wp-json/wc/store/v1/cart/add-item",
@@ -389,7 +389,7 @@ jobs:
 
           variable_payload = json.dumps({
               "id": selected_variation_id,
-              "quantity": 1,
+              "quantity": 6,
               "variation": candidate_selection,
           }).encode("utf-8")
           variable_add_req = urllib.request.Request(
