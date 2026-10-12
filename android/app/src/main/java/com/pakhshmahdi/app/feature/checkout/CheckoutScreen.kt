@@ -11,6 +11,7 @@ import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.LocalOffer
 import androidx.compose.material.icons.outlined.LocalShipping
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -80,6 +81,8 @@ fun CheckoutScreen(onBack: () -> Unit) {
     var couponCode by remember { mutableStateOf("") }
     var provinceMenu by remember { mutableStateOf(false) }
     var formError by remember { mutableStateOf<String?>(null) }
+    var showMapPicker by remember { mutableStateOf(false) }
+    var pendingMapCityName by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         vm.prepare(CartStore.lines.toList())
@@ -109,6 +112,19 @@ fun CheckoutScreen(onBack: () -> Unit) {
                 cityLoading = false
                 cityError = "فهرست شهرها دریافت نشد. اتصال اینترنت را بررسی و دوباره تلاش کنید."
             }
+    }
+
+    LaunchedEffect(cities, pendingMapCityName) {
+        val requestedCity = pendingMapCityName
+        if (!requestedCity.isNullOrBlank() && cities.isNotEmpty()) {
+            val match = cities.firstOrNull { city ->
+                placeNamesMatch(city.name, requestedCity)
+            }
+            if (match != null) {
+                cityId = match.id
+                pendingMapCityName = null
+            }
+        }
     }
 
     LaunchedEffect(state.redirectUrl) {
@@ -180,7 +196,8 @@ fun CheckoutScreen(onBack: () -> Unit) {
             email.isNotBlank() && !email.contains("@") -> "ایمیل واردشده معتبر نیست."
             cityId.isBlank() -> "شهر را انتخاب کنید."
             address1.isBlank() -> "آدرس را وارد کنید."
-            cleanPostcode.length != 10 -> "کد پستی ۱۰ رقمی وارد کنید."
+            cleanPostcode.isNotBlank() && cleanPostcode.length != 10 ->
+                "اگر کد پستی را وارد می‌کنید باید ۱۰ رقمی باشد."
             else -> null
         }
         if (formError != null) return null
@@ -210,6 +227,34 @@ fun CheckoutScreen(onBack: () -> Unit) {
             onBack = onBack
         )
         return
+    }
+
+    if (showMapPicker) {
+        IranMapAddressPicker(
+            onDismiss = { showMapPicker = false },
+            onConfirm = { selection ->
+                if (selection.addressLine.isNotBlank()) {
+                    address1 = selection.addressLine
+                }
+
+                pendingMapCityName = selection.cityName.takeIf { it.isNotBlank() }
+
+                val mappedProvince = iranProvinces.firstOrNull { province ->
+                    placeNamesMatch(province.name, selection.provinceName)
+                }
+
+                if (mappedProvince != null) {
+                    if (provinceCode != mappedProvince.code) {
+                        allowSavedCityMatch = false
+                        cityId = ""
+                        cities = emptyList()
+                        provinceCode = mappedProvince.code
+                    }
+                }
+
+                showMapPicker = false
+            }
+        )
     }
 
     Column(
@@ -367,10 +412,53 @@ fun CheckoutScreen(onBack: () -> Unit) {
 
                 Spacer(Modifier.height(10.dp))
                 CheckoutField(address1, { address1 = it }, "آدرس کامل", singleLine = false)
+
+                Spacer(Modifier.height(8.dp))
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showMapPicker = true },
+                    shape = PMTheme.shapes.medium,
+                    color = c.accentGold.copy(alpha = .10f),
+                    border = BorderStroke(1.dp, c.accentGold.copy(alpha = .30f))
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Outlined.Map,
+                            contentDescription = null,
+                            tint = c.primary,
+                            modifier = Modifier.size(23.dp)
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                "انتخاب آدرس از روی نقشه ایران",
+                                color = c.textPrimary,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                "نقطه آدرس را روی نقشه مشخص کنید تا آدرس و شهر تکمیل شوند.",
+                                color = c.textSecondary,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+
                 CheckoutField(
                     postcode,
                     { postcode = normalizeNumericAddressField(it).take(10) },
-                    "کد پستی"
+                    "کد پستی (اختیاری)"
                 )
 
                 if (!formError.isNullOrBlank()) {
@@ -852,5 +940,25 @@ private fun paymentSubtitle(method: String): String = when (method) {
     "cheque" -> "بررسی و تایید توسط فروشگاه"
     else -> ""
 }
+
+private fun placeNamesMatch(left: String, right: String): Boolean {
+    val a = normalizePlaceName(left)
+    val b = normalizePlaceName(right)
+    if (a.isBlank() || b.isBlank()) return false
+    return a == b || a.contains(b) || b.contains(a)
+}
+
+private fun normalizePlaceName(value: String): String =
+    value.trim()
+        .lowercase()
+        .replace("استان", "")
+        .replace("province", "")
+        .replace("شهرستان", "")
+        .replace("county", "")
+        .replace("ي", "ی")
+        .replace("ك", "ک")
+        .replace("-", "")
+        .replace("_", "")
+        .replace(" ", "")
 
 private fun Boolean?.orFalse(): Boolean = this ?: false
