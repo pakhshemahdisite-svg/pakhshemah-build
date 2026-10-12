@@ -241,7 +241,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                         )
                     }
                 }
-            )
+            }
         }
     }
 }
