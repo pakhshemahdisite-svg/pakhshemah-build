@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pakhshmahdi.app.core.AppConfig
 import com.pakhshmahdi.app.data.cart.CartStore
+import com.pakhshmahdi.app.data.model.Product
 import com.pakhshmahdi.app.data.model.ProductVariation
 import com.pakhshmahdi.app.data.recent.RecentlyViewedStore
 import com.pakhshmahdi.app.data.wishlist.WishlistStore
