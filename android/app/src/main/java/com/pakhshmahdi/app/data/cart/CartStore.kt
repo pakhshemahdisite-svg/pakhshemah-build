@@ -17,6 +17,8 @@ data class CartLine(
     val unitPrice: String get() = variation?.price?.takeIf { it.isNotBlank() } ?: product.price
 }
 
+const val MIN_WHOLESALE_QUANTITY = 6
+
 object CartStore {
     val lines = mutableStateListOf<CartLine>()
 
@@ -44,11 +46,15 @@ object CartStore {
                     return@mapNotNull null
                 }
 
-                val maxStock = line.variation?.stockQuantity ?: line.product.stockQuantity.takeIf { line.variation == null }
-                if (maxStock != null && maxStock <= 0) {
+                val maxStock = line.variation?.stockQuantity
+                    ?: line.product.stockQuantity.takeIf { line.variation == null }
+                if (maxStock != null && maxStock < MIN_WHOLESALE_QUANTITY) {
                     null
                 } else {
-                    line.copy(quantity = maxStock?.let { line.quantity.coerceAtMost(it) } ?: line.quantity)
+                    val normalized = line.quantity.coerceAtLeast(MIN_WHOLESALE_QUANTITY)
+                    line.copy(
+                        quantity = maxStock?.let { normalized.coerceAtMost(it) } ?: normalized
+                    )
                 }
             }
         )
@@ -63,10 +69,18 @@ object CartStore {
 
         val key = "${product.id}:${variation?.id ?: 0L}"
         val index = lines.indexOfFirst { it.key == key }
-        val requested = if (index >= 0) lines[index].quantity + quantity else quantity
-        val maxStock = variation?.stockQuantity ?: product.stockQuantity.takeIf { variation == null }
-        val safeQuantity = maxStock?.let { requested.coerceAtMost(it.coerceAtLeast(0)) } ?: requested
-        if (safeQuantity <= 0) return
+        val maxStock = variation?.stockQuantity
+            ?: product.stockQuantity.takeIf { variation == null }
+
+        if (maxStock != null && maxStock < MIN_WHOLESALE_QUANTITY) return
+
+        val requested = if (index >= 0) {
+            lines[index].quantity + quantity
+        } else {
+            quantity.coerceAtLeast(MIN_WHOLESALE_QUANTITY)
+        }
+        val safeQuantity = maxStock?.let { requested.coerceAtMost(it) } ?: requested
+        if (safeQuantity < MIN_WHOLESALE_QUANTITY) return
 
         if (index >= 0) {
             lines[index] = lines[index].copy(quantity = safeQuantity)
@@ -95,8 +109,10 @@ object CartStore {
         val index = lines.indexOfFirst { it.key == key }
         if (index < 0) return
         val line = lines[index]
-        if (line.quantity > 1) {
-            lines[index] = line.copy(quantity = line.quantity - 1)
+        if (line.quantity > MIN_WHOLESALE_QUANTITY) {
+            lines[index] = line.copy(
+                quantity = (line.quantity - 1).coerceAtLeast(MIN_WHOLESALE_QUANTITY)
+            )
             persist()
         }
     }
@@ -113,7 +129,21 @@ object CartStore {
 
     fun replaceAll(updated: List<CartLine>) {
         lines.clear()
-        lines.addAll(updated)
+        lines.addAll(
+            updated.mapNotNull { line ->
+                val maxStock = line.variation?.stockQuantity
+                    ?: line.product.stockQuantity.takeIf { line.variation == null }
+
+                if (maxStock != null && maxStock < MIN_WHOLESALE_QUANTITY) {
+                    null
+                } else {
+                    val normalized = line.quantity.coerceAtLeast(MIN_WHOLESALE_QUANTITY)
+                    line.copy(
+                        quantity = maxStock?.let { normalized.coerceAtMost(it) } ?: normalized
+                    )
+                }
+            }
+        )
         persist()
     }
 
