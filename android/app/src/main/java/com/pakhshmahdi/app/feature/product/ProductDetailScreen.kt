@@ -305,6 +305,7 @@ fun ProductDetailScreen(
                     Spacer(Modifier.height(10.dp))
                     product.variations.forEachIndexed { index, variation ->
                         VariationOption(
+                            product = product,
                             variation = variation,
                             index = index,
                             selected = variation.id == selectedVariationId,
@@ -496,6 +497,7 @@ fun ProductDetailScreen(
 
 @Composable
 private fun VariationOption(
+    product: Product,
     variation: ProductVariation,
     index: Int,
     selected: Boolean,
@@ -514,7 +516,19 @@ private fun VariationOption(
             }
         }
         .joinToString(" • ")
-        .ifBlank { "متغیر #${variation.id}" }
+        .ifBlank {
+            val candidateAttributes = product.attributes.filter { it.variation }.ifEmpty {
+                product.attributes.filter { it.options.size >= product.variations.size }
+            }
+            candidateAttributes
+                .mapNotNull { attribute ->
+                    attribute.options.getOrNull(index)
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { value -> "${attribute.name}: $value" }
+                }
+                .joinToString(" • ")
+                .ifBlank { "گزینه محصول" }
+        }
 
     Surface(
         modifier = Modifier
