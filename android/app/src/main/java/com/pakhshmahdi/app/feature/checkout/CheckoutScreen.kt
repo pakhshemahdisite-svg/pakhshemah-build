@@ -119,7 +119,12 @@ fun CheckoutScreen(onBack: () -> Unit) {
         if (!requestedCity.isNullOrBlank() && cities.isNotEmpty()) {
             val match = cities.firstOrNull { city ->
                 placeNamesMatch(city.name, requestedCity)
+            } ?: if (placeNamesMatch(requestedCity, "تهران")) {
+                cities.firstOrNull { city -> placeNamesMatch(city.name, "تهران") }
+            } else {
+                null
             }
+
             if (match != null) {
                 cityId = match.id
                 pendingMapCityName = null
@@ -237,19 +242,21 @@ fun CheckoutScreen(onBack: () -> Unit) {
                     address1 = selection.addressLine
                 }
 
-                pendingMapCityName = selection.cityName.takeIf { it.isNotBlank() }
+                // Map selection is intentionally limited to Tehran province.
+                // Keep the shipping state on the exact PWS/WooCommerce Tehran code.
+                allowSavedCityMatch = false
+                pendingMapCityName = selection.cityName
+                    .takeIf { it.isNotBlank() }
+                    ?: "تهران"
 
-                val mappedProvince = iranProvinces.firstOrNull { province ->
-                    placeNamesMatch(province.name, selection.provinceName)
-                }
-
-                if (mappedProvince != null) {
-                    if (provinceCode != mappedProvince.code) {
-                        allowSavedCityMatch = false
-                        cityId = ""
-                        cities = emptyList()
-                        provinceCode = mappedProvince.code
-                    }
+                if (provinceCode != "558") {
+                    cityId = ""
+                    cities = emptyList()
+                    provinceCode = "558"
+                } else if (cityId.isBlank()) {
+                    // The LaunchedEffect above will match the map city against
+                    // the live PWS city list as soon as it is available.
+                    pendingMapCityName = pendingMapCityName ?: "تهران"
                 }
 
                 showMapPicker = false
@@ -954,6 +961,7 @@ private fun normalizePlaceName(value: String): String =
         .replace("استان", "")
         .replace("province", "")
         .replace("شهرستان", "")
+        .replace(Regex("""^شهر\s+"""), "")
         .replace("county", "")
         .replace("ي", "ی")
         .replace("ك", "ک")
