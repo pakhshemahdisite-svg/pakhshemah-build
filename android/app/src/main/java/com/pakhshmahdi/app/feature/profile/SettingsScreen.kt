@@ -12,6 +12,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.DeveloperMode
+import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.outlined.NotificationsActive
 import androidx.compose.material.icons.outlined.PhoneAndroid
@@ -20,6 +22,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pakhshmahdi.app.BuildConfig
 import com.pakhshmahdi.app.core.AppConfig
@@ -179,11 +183,64 @@ fun SettingsScreen(onBack: () -> Unit) {
 
             Spacer(Modifier.height(14.dp))
 
-            Text(
-                "توسعه دهنده امیر بخشی 09359492927",
-                style = MaterialTheme.typography.labelLarge,
-                color = c.textSecondary,
-                modifier = Modifier.fillMaxWidth()
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = PMTheme.shapes.card,
+                color = c.accentGold.copy(alpha = .10f),
+                border = BorderStroke(1.2.dp, c.accentGold.copy(alpha = .45f)),
+                shadowElevation = 3.dp
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Surface(
+                        modifier = Modifier.size(46.dp),
+                        shape = PMTheme.shapes.medium,
+                        color = c.accentGold.copy(alpha = .22f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Outlined.DeveloperMode,
+                                contentDescription = null,
+                                tint = c.primary,
+                                modifier = Modifier.size(25.dp)
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(9.dp))
+                    Text(
+                        "طراح و توسعه‌دهنده",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = c.textSecondary,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "امیر بخشی",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = c.textPrimary,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Outlined.Phone,
+                            contentDescription = null,
+                            tint = c.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "09359492927",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = c.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             )
         }
     }
