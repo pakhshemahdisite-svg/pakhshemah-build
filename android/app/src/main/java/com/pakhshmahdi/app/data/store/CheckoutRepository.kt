@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.pakhshmahdi.app.data.auth.AuthStore
 import com.pakhshmahdi.app.data.auth.ClaimOrderRequest
 import com.pakhshmahdi.app.data.cart.CartLine
+import com.pakhshmahdi.app.data.cart.MIN_WHOLESALE_QUANTITY
 import com.pakhshmahdi.app.data.local.LocalStore
 import com.pakhshmahdi.app.data.remote.ApiClient
 import retrofit2.Response
@@ -19,10 +20,16 @@ class CheckoutRepository {
         if (lines.isEmpty()) throw StoreApiException("سبد خرید خالی است.")
 
         return lines.map { line ->
-            val freshProduct = runCatching {
+            val freshProductRaw = runCatching {
                 ApiClient.api.product(line.product.id)
             }.getOrElse {
                 throw StoreApiException("اطلاعات «${line.product.name}» به‌روزرسانی نشد. دوباره تلاش کنید.")
+            }
+
+            val freshProduct = if (freshProductRaw.variations.isNotEmpty()) {
+                enrichVariableProduct(freshProductRaw)
+            } else {
+                freshProductRaw
             }
 
             if (!freshProduct.purchasable || !freshProduct.isInStock) {
@@ -49,10 +56,11 @@ class CheckoutRepository {
                 throw StoreApiException("«${freshProduct.name}» ناموجود شده است.")
             }
 
+            val wholesaleQuantity = line.quantity.coerceAtLeast(MIN_WHOLESALE_QUANTITY)
             line.copy(
                 product = freshProduct,
                 variation = freshVariation,
-                quantity = maxStock?.let { line.quantity.coerceAtMost(it) } ?: line.quantity
+                quantity = maxStock?.let { wholesaleQuantity.coerceAtMost(it) } ?: wholesaleQuantity
             )
         }
     }
@@ -63,10 +71,14 @@ class CheckoutRepository {
 
         val token = ensureToken()
 
-        // DELETE /cart/items returns [] on success, not a cart object.
-        val clearResponse = api.clearCart(token)
-        if (!clearResponse.isSuccessful) {
-            throw StoreApiException(errorMessage(clearResponse, "پاک‌سازی سبد سرور انجام نشد."))
+        // Only clear when the server cart actually contains items. Some WooCommerce
+        // installations reject DELETE /cart/items for an already-empty cart.
+        val existingCart = api.cart(token)
+        if (existingCart.isSuccessful && (existingCart.body()?.itemsCount ?: 0) > 0) {
+            val clearResponse = api.clearCart(token)
+            if (!clearResponse.isSuccessful) {
+                throw StoreApiException(errorMessage(clearResponse, "پاک‌سازی سبد سرور انجام نشد."))
+            }
         }
 
         var cart: StoreCart? = null
@@ -266,6 +278,51 @@ class CheckoutRepository {
             }
         }
         return result
+    }
+
+    private suspend fun enrichVariableProduct(
+        product: com.pakhshmahdi.app.data.model.Product
+    ): com.pakhshmahdi.app.data.model.Product {
+        val storeVariations = runCatching {
+            val response = api.productVariations(parent = product.id)
+            if (response.isSuccessful) response.body().orEmpty() else emptyList()
+        }.getOrDefault(emptyList())
+
+        val neededTaxonomies = product.attributes
+            .filter { it.slug.startsWith("pa_") && it.options.isNotEmpty() }
+            .map { it.slug }
+            .distinct()
+
+        val termSlugs = if (neededTaxonomies.isNotEmpty()) {
+            val taxonomies = runCatching {
+                val response = api.productAttributeTaxonomies()
+                if (response.isSuccessful) response.body().orEmpty() else emptyList()
+            }.getOrDefault(emptyList())
+
+            neededTaxonomies.associateWith { taxonomySlug ->
+                val taxonomy = taxonomies.firstOrNull { it.taxonomy == taxonomySlug }
+                if (taxonomy == null) {
+                    emptyMap()
+                } else {
+                    runCatching {
+                        val response = api.productAttributeTerms(taxonomy.id)
+                        if (response.isSuccessful) {
+                            response.body().orEmpty().associate { it.name to it.slug }
+                        } else {
+                            emptyMap()
+                        }
+                    }.getOrDefault(emptyMap())
+                }
+            }
+        } else {
+            emptyMap()
+        }
+
+        return VariationResolver.enrich(
+            product = product,
+            storeVariations = storeVariations,
+            termSlugs = termSlugs
+        )
     }
 
     private fun StoreCart.hasShippingRates(): Boolean =
