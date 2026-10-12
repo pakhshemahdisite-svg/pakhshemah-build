@@ -54,8 +54,8 @@ android {
         applicationId = "com.iamir.commerce"
         minSdk = 26
         targetSdk = 36
-        versionCode = 47
-        versionName = "0.10.12"
+        versionCode = 48
+        versionName = "0.10.13"
 
         vectorDrawables.useSupportLibrary = true
     }
