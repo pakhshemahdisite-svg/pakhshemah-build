@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.pakhshmahdi.app.data.cart.CartLine
 import com.pakhshmahdi.app.data.cart.CartStore
+import com.pakhshmahdi.app.data.cart.MIN_WHOLESALE_QUANTITY
 import com.pakhshmahdi.app.data.store.moneyLineTotal
 import com.pakhshmahdi.app.ui.components.PMEmptyState
 import com.pakhshmahdi.app.ui.components.PMScreenTopBar
@@ -328,6 +329,7 @@ private fun PremiumCartLineCard(line: CartLine) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(
                                 onClick = { CartStore.decrement(line.key) },
+                                enabled = line.quantity > MIN_WHOLESALE_QUANTITY,
                                 modifier = Modifier.size(34.dp)
                             ) {
                                 Text("−", color = c.textPrimary, fontWeight = FontWeight.Black)
