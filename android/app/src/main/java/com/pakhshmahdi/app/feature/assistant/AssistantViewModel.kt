@@ -84,7 +84,9 @@ class AssistantViewModel : ViewModel() {
             mutable.update { it.copy(notice = problem) }
             return
         }
-        val history = snapshot.bubbles.takeLast(6).map { bubble ->
+        val history = snapshot.bubbles.takeLast(6)
+            .filterNot { AssistantInputPolicy.hasContact(it.text) }
+            .map { bubble ->
             AssistantTurn(
                 role = if (bubble.fromCustomer) "user" else "assistant",
                 content = bubble.text.take(300)
