@@ -8,6 +8,10 @@ class AssistantContractTest {
     @Test fun rejectsPersonalContactBeforeProviderCall() {
         assertNull(AssistantInputPolicy.validate("ظروف نگهدارنده چه رنگی موجود دارید؟"))
         assertNotNull(AssistantInputPolicy.validate("با 09123456789 تماس بگیرید"))
+        assertNotNull(AssistantInputPolicy.validate("با ۰۹۱۲ ۳۴۵ ۶۷ ۸۹ تماس بگیرید"))
+        assertNotNull(AssistantInputPolicy.validate("با ٠٩١٢٣٤٥٦٧٨٩ تماس بگیرید"))
+        assertNotNull(AssistantInputPolicy.validate("با +۹۸ ۹۱۲ ۳۴۵ ۶۷ ۸۹ تماس بگیرید"))
+        assertFalse(AssistantInputPolicy.hasContact("فروش ۱۲۳ محصول امروز چقدر بوده؟"))
         assertNotNull(AssistantInputPolicy.validate("این ایمیل من است a@example.com"))
         assertNotNull(AssistantInputPolicy.validate(" "))
         assertNotNull(AssistantInputPolicy.validate("x".repeat(501)))
