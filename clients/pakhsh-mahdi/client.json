@@ -19,6 +19,7 @@
     "darkBackground": "#050505"
   },
   "features": {
+    "assistant": true,
     "wishlist": true,
     "otp": true,
     "coupons": true,
