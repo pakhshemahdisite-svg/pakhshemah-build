@@ -100,7 +100,7 @@ class AssistantViewModel : ViewModel() {
                 val answer = repository.ask(
                     token, AssistantRequest(
                         question = question, conversationId = conversationId,
-                        history = history
+                        history = history, consent = true
                     )
                 )
                 if (token != sessionToken) return@launch
