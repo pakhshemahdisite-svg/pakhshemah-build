@@ -19,7 +19,8 @@ data class AssistantTurn(
 data class AssistantRequest(
     val question: String,
     @SerializedName("conversation_id") val conversationId: String,
-    val history: List<AssistantTurn>
+    val history: List<AssistantTurn>,
+    val consent: Boolean
 )
 
 data class AssistantReply(
