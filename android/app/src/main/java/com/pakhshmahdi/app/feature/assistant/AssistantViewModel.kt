@@ -47,7 +47,7 @@ class AssistantViewModel : ViewModel() {
         if (clean == null) return
         viewModelScope.launch {
             try {
-                val ready = repository.status(clean).enabled
+                val ready = repository.status(clean).isTrustedCustomerReady()
                 if (sessionToken != clean || sessionGeneration != generation) return@launch
                 mutable.update {
                     it.copy(
