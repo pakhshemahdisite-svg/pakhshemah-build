@@ -17,7 +17,7 @@ class AssistantContractTest {
         val request = AssistantRequest(
             question = "چند مدل ظرف پلاستیکی موجود دارید؟",
             conversationId = "123e4567-e89b-42d3-a456-426614174000",
-            history = listOf(AssistantTurn("user", "قیمت ظرف؟"))
+            history = listOf(AssistantTurn("user", "قیمت ظرف؟")), consent = true
         )
         val json = Gson().toJson(request)
         assertTrue(json.contains("\"conversation_id\""))
