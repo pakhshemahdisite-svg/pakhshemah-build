@@ -1,5 +1,8 @@
 package com.pakhshmahdi.app.data.remote
 
+import com.pakhshmahdi.app.data.assistant.AssistantRequest
+import com.pakhshmahdi.app.data.assistant.AssistantReply
+import com.pakhshmahdi.app.data.assistant.AssistantStatus
 import com.pakhshmahdi.app.data.auth.AuthResponse
 import com.pakhshmahdi.app.data.auth.BillingProfile
 import com.pakhshmahdi.app.data.auth.BillingResponse
@@ -26,6 +29,17 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface PakhshMahdiApi {
+    @GET("ai/status")
+    suspend fun assistantStatus(
+        @Header("Authorization") authorization: String
+    ): AssistantStatus
+
+    @POST("ai/chat")
+    suspend fun assistantChat(
+        @Header("Authorization") authorization: String,
+        @Body request: AssistantRequest
+    ): AssistantReply
+
     @POST("auth/request-otp")
     suspend fun requestOtp(@Body request: OtpRequest): OtpRequestResponse
 
