@@ -29,7 +29,8 @@ fun ProfileScreen(
     onOrders: () -> Unit,
     onNotifications: () -> Unit,
     onSupport: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onAssistant: () -> Unit
 ) {
     val c = PMTheme.colors
     val vm: ProfileViewModel = viewModel()
@@ -196,6 +197,14 @@ fun ProfileScreen(
 
             Spacer(Modifier.height(18.dp))
 
+            if (AppConfig.FEATURE_ASSISTANT) {
+                ProfileMenuItem(
+                    icon = Icons.Outlined.AutoAwesome,
+                    title = "دستیار هوشمند فروش",
+                    subtitle = "پرسش و پاسخ درباره محصولات و خرید عمده",
+                    onClick = onAssistant
+                )
+            }
             ProfileMenuItem(
                 icon = Icons.Outlined.ReceiptLong,
                 title = "سفارش‌های من",
