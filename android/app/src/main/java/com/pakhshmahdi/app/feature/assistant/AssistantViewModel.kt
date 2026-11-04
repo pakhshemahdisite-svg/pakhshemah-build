@@ -115,8 +115,16 @@ class AssistantViewModel : ViewModel() {
                 }
             } catch (error: Exception) {
                 if (token != sessionToken) return@launch
+                // A failed read-only AI reply must not silently drop a
+                // customer's question or create a duplicate chat bubble.
+                // Retrying is always the customer's explicit decision.
                 mutable.update {
-                    it.copy(busy = false, notice = repository.humanError(error))
+                    it.copy(
+                        busy = false,
+                        draft = question,
+                        notice = repository.humanError(error),
+                        bubbles = it.bubbles.filterNot { bubble -> bubble.id == customerBubble.id }
+                    )
                 }
             }
         }
