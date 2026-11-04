@@ -195,8 +195,9 @@ fun AssistantScreen(onBack: () -> Unit, onLogin: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = consent, onCheckedChange = { consent = it })
                 Text(
-                    "موافقم متن سؤال برای پاسخ‌گویی به سرویس هوش مصنوعی منتقل شود. " +
-                        "اطلاعات شخصی یا سفارش محرمانه ارسال نمی‌کنم.",
+                    "موافقم متن سؤال برای پاسخ‌گویی به هوش مصنوعی منتقل شود. " +
+                        "برای گفتار از سرویس تشخیص صدای گوشی استفاده می‌شود؛ " +
+                        "اطلاعات تماس یا اطلاعات محرمانه سفارش را ارسال نمی‌کنم.",
                     modifier = Modifier.weight(1f),
                     color = c.textSecondary,
                     style = MaterialTheme.typography.labelSmall
