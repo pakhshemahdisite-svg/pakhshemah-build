@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.NotificationsNone
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material3.*
@@ -60,7 +61,8 @@ fun HomeScreen(
     onCategories: () -> Unit,
     onNotifications: () -> Unit,
     onWishlist: () -> Unit,
-    onCart: () -> Unit
+    onCart: () -> Unit,
+    onAssistant: () -> Unit
 ) {
     val c = PMTheme.colors
     val vm: HomeViewModel = viewModel()
@@ -94,7 +96,8 @@ fun HomeScreen(
                 onSearch = onSearch,
                 onNotifications = onNotifications,
                 onWishlist = onWishlist,
-                onCart = onCart
+                onCart = onCart,
+                onAssistant = onAssistant
             )
         }
 
@@ -150,7 +153,8 @@ private fun PremiumHomeHeader(
     onSearch: () -> Unit,
     onNotifications: () -> Unit,
     onWishlist: () -> Unit,
-    onCart: () -> Unit
+    onCart: () -> Unit,
+    onAssistant: () -> Unit
 ) {
     val c = PMTheme.colors
     val cartCount = CartStore.totalQuantity
@@ -232,6 +236,28 @@ private fun PremiumHomeHeader(
                     textAlign = TextAlign.End
                 )
 
+            }
+        }
+        if (AppConfig.FEATURE_ASSISTANT) {
+            Spacer(Modifier.height(9.dp))
+            Surface(
+                modifier = Modifier.fillMaxWidth().clickable(onClick = onAssistant),
+                shape = RoundedCornerShape(18.dp),
+                color = c.primaryDark,
+                border = BorderStroke(1.dp, c.accentGold)
+            ) {
+                Row(Modifier.padding(13.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.AutoAwesome, null, tint = c.accentGold)
+                    Spacer(Modifier.width(9.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("از دستیار هوشمند فروش بپرسید",
+                            color = c.accentGold, fontWeight = FontWeight.Bold)
+                        Text("مشاوره فارسی، محصولات موجود و شرایط خرید عمده",
+                            color = c.accentGold.copy(alpha = .85f),
+                            style = MaterialTheme.typography.labelSmall)
+                    }
+                    Text("‹", color = c.accentGold)
+                }
             }
         }
     }

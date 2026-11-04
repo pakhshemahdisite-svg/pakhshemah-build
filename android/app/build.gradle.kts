@@ -86,6 +86,7 @@ android {
                 buildConfigField("String", "BRAND_ACCENT", quotedBuildConfig(branding.string("accent")))
                 buildConfigField("String", "BRAND_DARK_BACKGROUND", quotedBuildConfig(branding.string("darkBackground")))
 
+                buildConfigField("boolean", "FEATURE_ASSISTANT", features.boolean("assistant", false).toString())
                 buildConfigField("boolean", "FEATURE_WISHLIST", features.boolean("wishlist", true).toString())
                 buildConfigField("boolean", "FEATURE_OTP", features.boolean("otp", true).toString())
                 buildConfigField("boolean", "FEATURE_COUPONS", features.boolean("coupons", true).toString())

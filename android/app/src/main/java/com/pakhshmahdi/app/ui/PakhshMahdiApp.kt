@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.pakhshmahdi.app.data.auth.AuthStore
+import com.pakhshmahdi.app.feature.assistant.AssistantScreen
 import com.pakhshmahdi.app.feature.auth.LoginScreen
 import com.pakhshmahdi.app.feature.cart.CartScreen
 import com.pakhshmahdi.app.feature.catalog.CatalogScreen
@@ -92,6 +93,7 @@ fun PakhshMahdiApp(
                 current != "orders" &&
                 current != "notifications" &&
                 current != "support" &&
+                current != "assistant" &&
                 current != "settings" &&
                 !current.startsWith("login") &&
                 !current.startsWith("product/") &&
@@ -138,7 +140,11 @@ fun PakhshMahdiApp(
                     onCategories = { goTopLevel("categories") },
                     onNotifications = { nav.navigate("notifications") },
                     onWishlist = { nav.navigate("wishlist") },
-                    onCart = { goTopLevel("cart") }
+                    onCart = { goTopLevel("cart") },
+                    onAssistant = {
+                        if (AuthStore.isLoggedIn) nav.navigate("assistant")
+                        else nav.navigate("login?next=assistant")
+                    }
                 )
             }
             composable("categories") {
@@ -190,7 +196,8 @@ fun PakhshMahdiApp(
                     onOrders = { nav.navigate("orders") },
                     onNotifications = { nav.navigate("notifications") },
                     onSupport = { nav.navigate("support") },
-                    onSettings = { nav.navigate("settings") }
+                    onSettings = { nav.navigate("settings") },
+                    onAssistant = { nav.navigate("assistant") }
                 )
             }
             composable("account-edit") {
@@ -215,6 +222,12 @@ fun PakhshMahdiApp(
             }
             composable("support") {
                 SupportScreen(onBack = { nav.popBackStack() })
+            }
+            composable("assistant") {
+                AssistantScreen(
+                    onBack = { nav.popBackStack() },
+                    onLogin = { nav.navigate("login?next=assistant") }
+                )
             }
             composable("settings") {
                 SettingsScreen(onBack = { nav.popBackStack() })
@@ -258,6 +271,7 @@ fun PakhshMahdiApp(
                         nav.popBackStack()
                         when {
                             next == "checkout" -> nav.navigate("checkout")
+                            next == "assistant" -> nav.navigate("assistant")
                             next == "orders" -> nav.navigate("orders")
                             next == "notifications" -> nav.navigate("notifications")
                             next.startsWith("order/") -> nav.navigate(next)

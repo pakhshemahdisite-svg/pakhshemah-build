@@ -14,6 +14,7 @@ object AppConfig {
     val SUPPORT_URL: String = BuildConfig.SUPPORT_URL
     val CONTACT_URL: String = BuildConfig.CONTACT_URL
 
+    val FEATURE_ASSISTANT: Boolean = BuildConfig.FEATURE_ASSISTANT
     val FEATURE_WISHLIST: Boolean = BuildConfig.FEATURE_WISHLIST
     val FEATURE_OTP: Boolean = BuildConfig.FEATURE_OTP
     val FEATURE_COUPONS: Boolean = BuildConfig.FEATURE_COUPONS
