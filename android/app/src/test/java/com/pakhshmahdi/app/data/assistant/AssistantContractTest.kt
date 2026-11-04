@@ -5,6 +5,13 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class AssistantContractTest {
+    @Test fun refusesLegacyOrManagerChatReadiness() {
+        assertFalse(AssistantStatus(enabled = false, mode = "server_verified_customer_only").isTrustedCustomerReady())
+        assertFalse(AssistantStatus(enabled = true, mode = "legacy_public_chat").isTrustedCustomerReady())
+        assertFalse(AssistantStatus(enabled = true, mode = "manager").isTrustedCustomerReady())
+        assertTrue(AssistantStatus(enabled = true, mode = "server_verified_customer_only").isTrustedCustomerReady())
+    }
+
     @Test fun rejectsPersonalContactBeforeProviderCall() {
         assertNull(AssistantInputPolicy.validate("ظروف نگهدارنده چه رنگی موجود دارید؟"))
         assertNotNull(AssistantInputPolicy.validate("با 09123456789 تماس بگیرید"))
