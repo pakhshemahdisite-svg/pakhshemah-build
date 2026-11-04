@@ -9,7 +9,11 @@ import java.util.UUID
 data class AssistantStatus(
     val enabled: Boolean = false,
     val mode: String = "unavailable"
-)
+) {
+    /** Reject enabled=true from a legacy, misconfigured or manager endpoint. */
+    fun isTrustedCustomerReady(): Boolean =
+        enabled && mode == "server_verified_customer_only"
+}
 
 data class AssistantTurn(
     val role: String,
