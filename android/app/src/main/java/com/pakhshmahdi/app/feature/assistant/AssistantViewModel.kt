@@ -29,6 +29,7 @@ class AssistantViewModel : ViewModel() {
     private val mutable = MutableStateFlow(AssistantUiState())
     val state: StateFlow<AssistantUiState> = mutable.asStateFlow()
     private var sessionToken: String? = null
+    private var sessionGeneration: Long = 0
     private var conversationId = UUID.randomUUID().toString()
 
     /** Wipe conversation immediately on user-switch / sign-out. */
@@ -36,6 +37,8 @@ class AssistantViewModel : ViewModel() {
         val clean = token?.takeIf { it.isNotBlank() }
         if (clean == sessionToken) return
         sessionToken = clean
+        sessionGeneration += 1
+        val generation = sessionGeneration
         conversationId = UUID.randomUUID().toString()
         mutable.value = AssistantUiState(
             signedIn = clean != null, checking = clean != null,
@@ -45,7 +48,7 @@ class AssistantViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val ready = repository.status(clean).enabled
-                if (sessionToken != clean) return@launch
+                if (sessionToken != clean || sessionGeneration != generation) return@launch
                 mutable.update {
                     it.copy(
                         available = ready, checking = false,
@@ -54,7 +57,7 @@ class AssistantViewModel : ViewModel() {
                     )
                 }
             } catch (error: Exception) {
-                if (sessionToken != clean) return@launch
+                if (sessionToken != clean || sessionGeneration != generation) return@launch
                 mutable.update {
                     it.copy(checking = false, available = false,
                         notice = repository.humanError(error))
@@ -76,6 +79,8 @@ class AssistantViewModel : ViewModel() {
 
     fun send() {
         val token = sessionToken ?: return
+        val generation = sessionGeneration
+        val currentConversation = conversationId
         val snapshot = mutable.value
         if (!snapshot.available || snapshot.busy) return
         val question = snapshot.draft.trim()
@@ -98,14 +103,17 @@ class AssistantViewModel : ViewModel() {
                 bubbles = it.bubbles + customerBubble)
         }
         viewModelScope.launch {
+            // A delayed task must not send the previous account's question
+            // if the user logs out and back in using the same token.
+            if (generation != sessionGeneration || token != sessionToken) return@launch
             try {
                 val answer = repository.ask(
                     token, AssistantRequest(
-                        question = question, conversationId = conversationId,
+                        question = question, conversationId = currentConversation,
                         history = history, consent = true
                     )
                 )
-                if (token != sessionToken) return@launch
+                if (token != sessionToken || generation != sessionGeneration) return@launch
                 mutable.update {
                     it.copy(busy = false,
                         bubbles = it.bubbles + AssistantBubble(
@@ -114,7 +122,7 @@ class AssistantViewModel : ViewModel() {
                     )
                 }
             } catch (error: Exception) {
-                if (token != sessionToken) return@launch
+                if (token != sessionToken || generation != sessionGeneration) return@launch
                 // A failed read-only AI reply must not silently drop a
                 // customer's question or create a duplicate chat bubble.
                 // Retrying is always the customer's explicit decision.
