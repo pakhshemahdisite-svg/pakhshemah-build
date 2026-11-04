@@ -59,3 +59,20 @@ authenticated WP_User; merely seeing a Bearer string is not authentication.
 
 The manager app and bot AI activation are independent decisions. No existing
 site, Render webhook, WooCommerce order, product or APK was changed.
+
+## 2026-11-04 additional release guard
+
+- Customer chat readiness is **fail closed**: HTTP 200 alone and `enabled:true`
+  are insufficient. The server must return both `enabled:true` and
+  `mode:"server_verified_customer_only"`; stale manager/legacy modes cannot
+  activate the customer screen.
+- Added JVM regression assertions for four combinations of enabled/mode.
+  Local `kotlinc 1.9.0` compiled the independent policy/model fixture:
+  **8/8 contact examples + 4/4 handshake combinations passed**. This does
+  **not** assert an Android/Compose/Gradle build or live WordPress session.
+- WPVibe read-only connection is over Free rolling quota (114/100, renewed
+  capacity expected around Nov 4 18:40 UTC). A one-time read-only check
+  is queued after reset; never auto-deploy or invoke a paid provider model.
+- Do not merge into `main` until IAMIR `auth/me` is verified on the live
+  site and the intended signing certificate/versionCode is checked against
+  the APK already installed on customer devices.
